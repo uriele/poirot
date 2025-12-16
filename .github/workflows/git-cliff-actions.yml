@@ -1,4 +1,4 @@
-name: Rust
+name: Cliff GitHub Action
 
 on:
   push:
