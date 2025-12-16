@@ -23,91 +23,91 @@ pub mod constants;
 
 impl ToString for Categories {
     fn to_string(&self) -> String {
-        arxiv_category_to_string(self)
+        arxiv_category(self)
     }
 }
 impl ToString for ComputerScience {
     fn to_string(&self) -> String {
-        arxiv_text::computer_science_to_string(self)
+        arxiv_text::computer_science(self)
     }
 }
 impl ToString for Economics {
     fn to_string(&self) -> String {
-        arxiv_text::economics_to_string(self)
+        arxiv_text::economics(self)
     }
 }
 impl ToString for ElectricalEngineeringAndSystemsScience {
     fn to_string(&self) -> String {
-        arxiv_text::eess_to_string(self)
+        arxiv_text::eess(self)
     }
 }
 impl ToString for Mathematics {
     fn to_string(&self) -> String {
-        arxiv_text::mathematics_to_string(self)
+        arxiv_text::mathematics(self)
     }
 }
 impl ToString for PhysicsCategory {
     fn to_string(&self) -> String {
-        arxiv_text::physics_category_to_string(self)
+        arxiv_text::physics_category(self)
     }
 }
 impl ToString for QuantitativeBiology {
     fn to_string(&self) -> String {
-        arxiv_text::quantitative_biology_to_string(self)
+        arxiv_text::quantitative_biology(self)
     }
 }
 impl ToString for QuantitativeFinance {
     fn to_string(&self) -> String {
-        arxiv_text::quantitative_finance_to_string(self)
+        arxiv_text::quantitative_finance(self)
     }
 }
 impl ToString for Statistics {
     fn to_string(&self) -> String {
-        arxiv_text::statistics_to_string(self)
+        arxiv_text::statistics(self)
     }
 }
 impl ToString for Astrophysics {
     fn to_string(&self) -> String {
-        arxiv_text::astrophysics_to_string(self)
+        arxiv_text::astrophysics(self)
     }
 }
 impl ToString for CondensedMatter {
     fn to_string(&self) -> String {
-        arxiv_text::condensed_matter_to_string(self)
+        arxiv_text::condensed_matter(self)
     }
 }
 impl ToString for  Physics {
     fn to_string(&self) -> String {
-        arxiv_text::physics_to_string(self)
+        arxiv_text::physics(self)
     }
 }
 impl ToString for HighEnergyPhysics {
     fn to_string(&self) -> String {
-        arxiv_text::high_energy_physics_to_string(self)
+        arxiv_text::high_energy_physics(self)
     }
 }
 impl ToString for NonLinearSciences {
     fn to_string(&self) -> String {
-        arxiv_text::non_linear_sciences_to_string(self)
+        arxiv_text::non_linear_sciences(self)
     }
 }
 impl ToString for Nuclear {
     fn to_string(&self) -> String {
-        arxiv_text::nuclear_to_string(self)
+        arxiv_text::nuclear(self)
     }
 }
 
 
-pub fn arxiv_category_to_string(category: &arxiv_text::Categories) -> String{
+pub fn arxiv_category(category: &arxiv_text::Categories) -> &'static str{
     match category{
-        arxiv_text::Categories::ComputerScience(cs_cat) => arxiv_text::computer_science_to_string(cs_cat),
-        arxiv_text::Categories::Economics(econ_cat) => arxiv_text::economics_to_string(econ_cat),
-        arxiv_text::Categories::ElectricalEngineeringAndSystemsScience(eess_cat) => arxiv_text::eess_to_string(eess_cat),
-        arxiv_text::Categories::Mathematics(math_cat) => arxiv_text::mathematics_to_string(math_cat),
-        arxiv_text::Categories::Physics(phys_cat) => arxiv_text::physics_category_to_string(phys_cat),
-        arxiv_text::Categories::QuantitativeBiology(qbio_cat) => arxiv_text::quantitative_biology_to_string(qbio_cat),
-        arxiv_text::Categories::QuantitativeFinance(qfin_cat) => arxiv_text::quantitative_finance_to_string(qfin_cat),
-        arxiv_text::Categories::Statistics(stat_cat) => arxiv_text::statistics_to_string(stat_cat),
+        arxiv_text::Categories::ComputerScience(cs_cat) => arxiv_text::computer_science(cs_cat),
+        arxiv_text::Categories::Economics(econ_cat) => arxiv_text::economics(econ_cat),
+        arxiv_text::Categories::ElectricalEngineeringAndSystemsScience(eess_cat) => arxiv_text::eess(eess_cat),
+        arxiv_text::Categories::Mathematics(math_cat) => arxiv_text::mathematics(math_cat),
+        arxiv_text::Categories::Physics(phys_cat) => arxiv_text::physics_category(phys_cat),
+        arxiv_text::Categories::QuantitativeBiology(qbio_cat) => arxiv_text::quantitative_biology(qbio_cat),
+        arxiv_text::Categories::QuantitativeFinance(qfin_cat) => arxiv_text::quantitative_finance(qfin_cat),
+        arxiv_text::Categories::Statistics(stat_cat) => arxiv_text::statistics(stat_cat),
     }
 }
         
@@ -185,32 +185,32 @@ pub mod arxiv_text{
         SY ,
     }
 
-    pub fn computer_science_to_string(cat: &ComputerScience) -> String{
+    pub fn computer_science(cat: &ComputerScience) -> &'static str{
         match cat{
-            ComputerScience::AI => "cs.AI".to_string(),
-            ComputerScience::CL => "cs.CL".to_string(),
-            ComputerScience::CV => "cs.CV".to_string(),
-            ComputerScience::CY => "cs.CY".to_string(),
-            ComputerScience::DB => "cs.DB".to_string(),
-            ComputerScience::DL => "cs.DL".to_string(),
-            ComputerScience::DM => "cs.DM".to_string(),
-            ComputerScience::DC => "cs.DC".to_string(),
-            ComputerScience::GL => "cs.GL".to_string(),
-            ComputerScience::GR => "cs.GR".to_string(),
-            ComputerScience::HC => "cs.HC".to_string(),
-            ComputerScience::IR => "cs.IR".to_string(),
-            ComputerScience::IT => "cs.IT".to_string(),
-            ComputerScience::LG => "cs.LG".to_string(),
-            ComputerScience::LO => "cs.LO".to_string(),
-            ComputerScience::MS => "cs.MS".to_string(),
-            ComputerScience::NE => "cs.NE".to_string(),
-            ComputerScience::NI => "cs.NI".to_string(),
-            ComputerScience::OS => "cs.OS".to_string(),
-            ComputerScience::PE => "cs.PE".to_string(),
-            ComputerScience::PL => "cs.PL".to_string(),
-            ComputerScience::RO => "cs.RO".to_string(),
-            ComputerScience::SE => "cs.SE".to_string(),
-            ComputerScience::SY => "cs.SY".to_string(),
+            ComputerScience::AI => "cs.AI",
+            ComputerScience::CL => "cs.CL",
+            ComputerScience::CV => "cs.CV",
+            ComputerScience::CY => "cs.CY",
+            ComputerScience::DB => "cs.DB",
+            ComputerScience::DL => "cs.DL",
+            ComputerScience::DM => "cs.DM",
+            ComputerScience::DC => "cs.DC",
+            ComputerScience::GL => "cs.GL",
+            ComputerScience::GR => "cs.GR",
+            ComputerScience::HC => "cs.HC",
+            ComputerScience::IR => "cs.IR",
+            ComputerScience::IT => "cs.IT",
+            ComputerScience::LG => "cs.LG",
+            ComputerScience::LO => "cs.LO",
+            ComputerScience::MS => "cs.MS",
+            ComputerScience::NE => "cs.NE",
+            ComputerScience::NI => "cs.NI",
+            ComputerScience::OS => "cs.OS",
+            ComputerScience::PE => "cs.PE",
+            ComputerScience::PL => "cs.PL",
+            ComputerScience::RO => "cs.RO",
+            ComputerScience::SE => "cs.SE",
+            ComputerScience::SY => "cs.SY",
         }
     }
 
@@ -220,11 +220,11 @@ pub mod arxiv_text{
         TH,
     }
 
-    pub fn economics_to_string(cat: &Economics) -> String{
+    pub fn economics(cat: &Economics) -> &'static str{
         match cat{
-            Economics::EM => "econ.EM".to_string(),
-            Economics::GN => "econ.GN".to_string(),
-            Economics::TH => "econ.TH".to_string(),
+            Economics::EM => "econ.EM",
+            Economics::GN => "econ.GN",
+            Economics::TH => "econ.TH",
         }
     }
 
@@ -235,12 +235,12 @@ pub mod arxiv_text{
         SY ,
         }
 
-    pub fn eess_to_string(cat: &ElectricalEngineeringAndSystemsScience) -> String{
+    pub fn eess(cat: &ElectricalEngineeringAndSystemsScience) -> &'static str{
         match cat{
-            ElectricalEngineeringAndSystemsScience::AS => "eess.AS".to_string(),
-            ElectricalEngineeringAndSystemsScience::IV => "eess.IV".to_string(),
-            ElectricalEngineeringAndSystemsScience::SP => "eess.SP".to_string(),
-            ElectricalEngineeringAndSystemsScience::SY => "eess.SY".to_string(),
+            ElectricalEngineeringAndSystemsScience::AS => "eess.AS",
+            ElectricalEngineeringAndSystemsScience::IV => "eess.IV",
+            ElectricalEngineeringAndSystemsScience::SP => "eess.SP",
+            ElectricalEngineeringAndSystemsScience::SY => "eess.SY",
         }
     }
 
@@ -277,38 +277,38 @@ pub mod arxiv_text{
         ST ,
     }
 
-    pub fn mathematics_to_string(cat: &Mathematics) -> String{
+    pub fn mathematics(cat: &Mathematics) -> &'static str{
         match cat{
-            Mathematics::AC => "math.AC".to_string(),
-            Mathematics::AG => "math.AG".to_string(),
-            Mathematics::AP => "math.AP".to_string(),
-            Mathematics::AT => "math.AT".to_string(),
-            Mathematics::CA => "math.CA".to_string(),
-            Mathematics::CO => "math.CO".to_string(),
-            Mathematics::CT => "math.CT".to_string(),
-            Mathematics::CV => "math.CV".to_string(),
-            Mathematics::DG => "math.DG".to_string(),
-            Mathematics::DS => "math.DS".to_string(),
-            Mathematics::FA => "math.FA".to_string(),
-            Mathematics::GM => "math.GM".to_string(),
-            Mathematics::GN => "math.GN".to_string(),
-            Mathematics::GR => "math.GR".to_string(),
-            Mathematics::GT => "math.GT".to_string(),
-            Mathematics::HO => "math.HO".to_string(),
-            Mathematics::IT => "math.IT".to_string(),
-            Mathematics::KT => "math.KT".to_string(),
-            Mathematics::LO => "math.LO".to_string(),
-            Mathematics::MG => "math.MG".to_string(),
-            Mathematics::MP => "math.MP".to_string(),
-            Mathematics::NA => "math.NA".to_string(),
-            Mathematics::OA => "math.OA".to_string(),
-            Mathematics::OC => "math.OC".to_string(),
-            Mathematics::PR => "math.PR".to_string(),
-            Mathematics::QA => "math.QA".to_string(),
-            Mathematics::RT => "math.RT".to_string(),
-            Mathematics::SG => "math.SG".to_string(),
-            Mathematics::SP => "math.SP".to_string(),
-            Mathematics::ST => "math.ST".to_string(),
+            Mathematics::AC => "math.AC",
+            Mathematics::AG => "math.AG",
+            Mathematics::AP => "math.AP",
+            Mathematics::AT => "math.AT",
+            Mathematics::CA => "math.CA",
+            Mathematics::CO => "math.CO",
+            Mathematics::CT => "math.CT",
+            Mathematics::CV => "math.CV",
+            Mathematics::DG => "math.DG",
+            Mathematics::DS => "math.DS",
+            Mathematics::FA => "math.FA",
+            Mathematics::GM => "math.GM",
+            Mathematics::GN => "math.GN",
+            Mathematics::GR => "math.GR",
+            Mathematics::GT => "math.GT",
+            Mathematics::HO => "math.HO",
+            Mathematics::IT => "math.IT",
+            Mathematics::KT => "math.KT",
+            Mathematics::LO => "math.LO",
+            Mathematics::MG => "math.MG",
+            Mathematics::MP => "math.MP",
+            Mathematics::NA => "math.NA",
+            Mathematics::OA => "math.OA",
+            Mathematics::OC => "math.OC",
+            Mathematics::PR => "math.PR",
+            Mathematics::QA => "math.QA",
+            Mathematics::RT => "math.RT",
+            Mathematics::SG => "math.SG",
+            Mathematics::SP => "math.SP",
+            Mathematics::ST => "math.ST",
         }   
     }
 
@@ -326,17 +326,17 @@ pub mod arxiv_text{
         QuantumPhysics,
     }
 
-    pub fn physics_category_to_string(cat: &PhysicsCategory) -> String{
+    pub fn physics_category(cat: &PhysicsCategory) -> &'static str{
         match cat{
-            PhysicsCategory::Astrophysics(astro_cat) => astrophysics_to_string(astro_cat),
-            PhysicsCategory::CondensedMatter(cm_cat) => condensed_matter_to_string(cm_cat),
-            PhysicsCategory::GeneralRelativityAndQuantumCosmology => "gr-qc".to_string(),
-            PhysicsCategory::HighEnergyPhysics(hep_cat) => high_energy_physics_to_string(hep_cat),
-            PhysicsCategory::MathematicalPhysics => "math-ph".to_string(),
-            PhysicsCategory::NonLinearSciences(nlin_cat) => non_linear_sciences_to_string(nlin_cat),
-            PhysicsCategory::Nuclear(nucl_cat) => nuclear_to_string(nucl_cat),
-            PhysicsCategory::Physics(phys_cat) => physics_to_string(phys_cat),
-            PhysicsCategory::QuantumPhysics => "quant-ph".to_string(),
+            PhysicsCategory::Astrophysics(astro_cat) => astrophysics(astro_cat),
+            PhysicsCategory::CondensedMatter(cm_cat) => condensed_matter(cm_cat),
+            PhysicsCategory::GeneralRelativityAndQuantumCosmology => "gr-qc",
+            PhysicsCategory::HighEnergyPhysics(hep_cat) => high_energy_physics(hep_cat),
+            PhysicsCategory::MathematicalPhysics => "math-ph",
+            PhysicsCategory::NonLinearSciences(nlin_cat) => non_linear_sciences(nlin_cat),
+            PhysicsCategory::Nuclear(nucl_cat) => nuclear(nucl_cat),
+            PhysicsCategory::Physics(phys_cat) => physics(phys_cat),
+            PhysicsCategory::QuantumPhysics => "quant-ph",
         }
     }
 
@@ -349,14 +349,14 @@ pub mod arxiv_text{
         SR,
     }
 
-    pub fn astrophysics_to_string(cat: &Astrophysics) -> String{
+    pub fn astrophysics(cat: &Astrophysics) -> &'static str{
         match cat{
-            Astrophysics::CO => "astro-ph.CO".to_string(),
-            Astrophysics::EP => "astro-ph.EP".to_string(),
-            Astrophysics::GA => "astro-ph.GA".to_string(),
-            Astrophysics::HE => "astro-ph.HE".to_string(),
-            Astrophysics::IM => "astro-ph.IM".to_string(),
-            Astrophysics::SR => "astro-ph.SR".to_string(),
+            Astrophysics::CO => "astro-ph.CO",
+            Astrophysics::EP => "astro-ph.EP",
+            Astrophysics::GA => "astro-ph.GA",
+            Astrophysics::HE => "astro-ph.HE",
+            Astrophysics::IM => "astro-ph.IM",
+            Astrophysics::SR => "astro-ph.SR",
         }
     }
     pub enum CondensedMatter{
@@ -371,17 +371,17 @@ pub mod arxiv_text{
         SuprCon,
     }
 
-    pub fn condensed_matter_to_string(cat: &CondensedMatter) -> String{
+    pub fn condensed_matter(cat: &CondensedMatter) -> &'static str{
         match cat{
-            CondensedMatter::DisNn => "cond-mat.dis-nn".to_string(),
-            CondensedMatter::MesHall => "cond-mat.mes-hall".to_string(),
-            CondensedMatter::MtrlSci => "cond-mat.mtrl-sci".to_string(),
-            CondensedMatter::Other => "cond-mat.other".to_string(),
-            CondensedMatter::QuantGas => "cond-mat.quant-gas".to_string(),
-            CondensedMatter::Soft => "cond-mat.soft".to_string(),
-            CondensedMatter::StatMech => "cond-mat.stat-mech".to_string(),
-            CondensedMatter::StrEl => "cond-mat.str-el".to_string(),
-            CondensedMatter::SuprCon => "cond-mat.supr-con".to_string(),
+            CondensedMatter::DisNn => "cond-mat.dis-nn",
+            CondensedMatter::MesHall => "cond-mat.mes-hall",
+            CondensedMatter::MtrlSci => "cond-mat.mtrl-sci",
+            CondensedMatter::Other => "cond-mat.other",
+            CondensedMatter::QuantGas => "cond-mat.quant-gas",
+            CondensedMatter::Soft => "cond-mat.soft",
+            CondensedMatter::StatMech => "cond-mat.stat-mech",
+            CondensedMatter::StrEl => "cond-mat.str-el",
+            CondensedMatter::SuprCon => "cond-mat.supr-con",
         }
     }
     
@@ -392,12 +392,12 @@ pub mod arxiv_text{
         TH,
     }
 
-    pub fn high_energy_physics_to_string(cat: &HighEnergyPhysics) -> String{
+    pub fn high_energy_physics(cat: &HighEnergyPhysics) -> &'static str{
         match cat{
-            HighEnergyPhysics::EX => "hep-ex".to_string(),
-            HighEnergyPhysics::LAT => "hep-lat".to_string(),
-            HighEnergyPhysics::PH => "hep-ph".to_string(),
-            HighEnergyPhysics::TH => "hep-th".to_string(),
+            HighEnergyPhysics::EX => "hep-ex",
+            HighEnergyPhysics::LAT => "hep-lat",
+            HighEnergyPhysics::PH => "hep-ph",
+            HighEnergyPhysics::TH => "hep-th",
         }
     }
 
@@ -409,13 +409,13 @@ pub mod arxiv_text{
         SI,
     }
 
-    pub fn non_linear_sciences_to_string(cat: &NonLinearSciences) -> String{
+    pub fn non_linear_sciences(cat: &NonLinearSciences) -> &'static str{
         match cat{
-            NonLinearSciences::AO => "nlin.AO".to_string(),
-            NonLinearSciences::CD => "nlin.CD".to_string(),
-            NonLinearSciences::CG => "nlin.CG".to_string(),
-            NonLinearSciences::PS => "nlin.PS".to_string(),
-            NonLinearSciences::SI => "nlin.SI".to_string(),
+            NonLinearSciences::AO => "nlin.AO",
+            NonLinearSciences::CD => "nlin.CD",
+            NonLinearSciences::CG => "nlin.CG",
+            NonLinearSciences::PS => "nlin.PS",
+            NonLinearSciences::SI => "nlin.SI",
         }
     }
 
@@ -424,10 +424,10 @@ pub mod arxiv_text{
         TH,
     }
 
-    pub fn nuclear_to_string(cat: &Nuclear) -> String{
+    pub fn nuclear(cat: &Nuclear) -> &'static str{
         match cat{
-            Nuclear::EX => "nucl-ex".to_string(),
-            Nuclear::TH => "nucl-th".to_string(),
+            Nuclear::EX => "nucl-ex",
+            Nuclear::TH => "nucl-th",
         }
     }
     pub enum Physics{
@@ -455,30 +455,30 @@ pub mod arxiv_text{
         SpacePh,
     }
      
-    pub fn physics_to_string(cat: &Physics) -> String{
+    pub fn physics(cat: &Physics) -> &'static str{
         match cat{
-            Physics::AccPh => "physics.acc-ph".to_string(),
-            Physics::AoPh => "physics.ao-ph".to_string(),
-            Physics::AppPh => "physics.app-ph".to_string(),
-            Physics::AtmClus => "physics.atm-clus".to_string(),
-            Physics::AtomPh => "physics.atom-ph".to_string(),
-            Physics::BioPh => "physics.bio-ph".to_string(),
-            Physics::ChemPh => "physics.chem-ph".to_string(),
-            Physics::ClassPh => "physics.class-ph".to_string(),
-            Physics::CompPh => "physics.comp-ph".to_string(),
-            Physics::DataAn => "physics.data-an".to_string(),
-            Physics::EdPh => "physics.ed-ph".to_string(),
-            Physics::FluDyn => "physics.flu-dyn".to_string(),
-            Physics::GenPh => "physics.gen-ph".to_string(),
-            Physics::GeoPh => "physics.geo-ph".to_string(),
-            Physics::HistTh => "physics.hist-ph".to_string(),
-            Physics::InsDet => "physics.ins-det".to_string(),
-            Physics::MedPh => "physics.med-ph".to_string(),
-            Physics::Optics => "physics.optics".to_string(),
-            Physics::PlasmaPh => "physics.plasm-ph".to_string(),
-            Physics::PopPh => "physics.pop-ph".to_string(),
-            Physics::SocPh => "physics.soc-ph".to_string(),
-            Physics::SpacePh => "physics.space-ph".to_string(),
+            Physics::AccPh => "physics.acc-ph",
+            Physics::AoPh => "physics.ao-ph",
+            Physics::AppPh => "physics.app-ph",
+            Physics::AtmClus => "physics.atm-clus",
+            Physics::AtomPh => "physics.atom-ph",
+            Physics::BioPh => "physics.bio-ph",
+            Physics::ChemPh => "physics.chem-ph",
+            Physics::ClassPh => "physics.class-ph",
+            Physics::CompPh => "physics.comp-ph",
+            Physics::DataAn => "physics.data-an",
+            Physics::EdPh => "physics.ed-ph",
+            Physics::FluDyn => "physics.flu-dyn",
+            Physics::GenPh => "physics.gen-ph",
+            Physics::GeoPh => "physics.geo-ph",
+            Physics::HistTh => "physics.hist-ph",
+            Physics::InsDet => "physics.ins-det",
+            Physics::MedPh => "physics.med-ph",
+            Physics::Optics => "physics.optics",
+            Physics::PlasmaPh => "physics.plasm-ph",
+            Physics::PopPh => "physics.pop-ph",
+            Physics::SocPh => "physics.soc-ph",
+            Physics::SpacePh => "physics.space-ph",
         }
     }
 
@@ -496,18 +496,18 @@ pub mod arxiv_text{
         TO,
     }
 
-    pub fn quantitative_biology_to_string(cat: &QuantitativeBiology) -> String{
+    pub fn quantitative_biology(cat: &QuantitativeBiology) -> &'static str{
         match cat{
-            QuantitativeBiology::BM => "q-bio.BM".to_string(),
-            QuantitativeBiology::CB => "q-bio.CB".to_string(),
-            QuantitativeBiology::GN => "q-bio.GN".to_string(),
-            QuantitativeBiology::MN => "q-bio.MN".to_string(),
-            QuantitativeBiology::NC => "q-bio.NC".to_string(),
-            QuantitativeBiology::OT => "q-bio.OT".to_string(),
-            QuantitativeBiology::PE => "q-bio.PE".to_string(),
-            QuantitativeBiology::QM => "q-bio.QM".to_string(),
-            QuantitativeBiology::SC => "q-bio.SC".to_string(),
-            QuantitativeBiology::TO => "q-bio.TO".to_string(),
+            QuantitativeBiology::BM => "q-bio.BM",
+            QuantitativeBiology::CB => "q-bio.CB",
+            QuantitativeBiology::GN => "q-bio.GN",
+            QuantitativeBiology::MN => "q-bio.MN",
+            QuantitativeBiology::NC => "q-bio.NC",
+            QuantitativeBiology::OT => "q-bio.OT",
+            QuantitativeBiology::PE => "q-bio.PE",
+            QuantitativeBiology::QM => "q-bio.QM",
+            QuantitativeBiology::SC => "q-bio.SC",
+            QuantitativeBiology::TO => "q-bio.TO",
         }
     }
     pub enum QuantitativeFinance{
@@ -522,17 +522,17 @@ pub mod arxiv_text{
         TR,
     }
 
-    pub fn quantitative_finance_to_string(cat: &QuantitativeFinance) -> String{
+    pub fn quantitative_finance(cat: &QuantitativeFinance) -> &'static str{
         match cat{
-            QuantitativeFinance::CP => "q-fin.CP".to_string(),
-            QuantitativeFinance::EC => "q-fin.EC".to_string(),
-            QuantitativeFinance::GN => "q-fin.GN".to_string(),
-            QuantitativeFinance::MF => "q-fin.MF".to_string(),
-            QuantitativeFinance::PM => "q-fin.PM".to_string(),
-            QuantitativeFinance::PR => "q-fin.PR".to_string(),
-            QuantitativeFinance::RM => "q-fin.RM".to_string(),
-            QuantitativeFinance::ST => "q-fin.ST".to_string(),
-            QuantitativeFinance::TR => "q-fin.TR".to_string(),
+            QuantitativeFinance::CP => "q-fin.CP",
+            QuantitativeFinance::EC => "q-fin.EC",
+            QuantitativeFinance::GN => "q-fin.GN",
+            QuantitativeFinance::MF => "q-fin.MF",
+            QuantitativeFinance::PM => "q-fin.PM",
+            QuantitativeFinance::PR => "q-fin.PR",
+            QuantitativeFinance::RM => "q-fin.RM",
+            QuantitativeFinance::ST => "q-fin.ST",
+            QuantitativeFinance::TR => "q-fin.TR",
         }
     }
 
@@ -545,14 +545,14 @@ pub mod arxiv_text{
         TH,
     }
 
-    pub fn statistics_to_string(cat: &Statistics) -> String{
+    pub fn statistics(cat: &Statistics) -> &'static str{
         match cat{
-            Statistics::AP => "stat.AP".to_string(),
-            Statistics::CO => "stat.CO".to_string(),
-            Statistics::ME => "stat.ME".to_string(),
-            Statistics::ML => "stat.ML".to_string(),
-            Statistics::OT => "stat.OT".to_string(),
-            Statistics::TH => "stat.TH".to_string(),
+            Statistics::AP => "stat.AP",
+            Statistics::CO => "stat.CO",
+            Statistics::ME => "stat.ME",
+            Statistics::ML => "stat.ML",
+            Statistics::OT => "stat.OT",
+            Statistics::TH => "stat.TH",
         }
     }
 }
@@ -563,7 +563,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_all_arxiv_category_to_string() {
+    fn test_all_arxiv_category() {
         let cs_cat = ComputerScience::AI;
         let econ_cat = Economics::EM;
         let eess_cat = ElectricalEngineeringAndSystemsScience::AS;
@@ -596,7 +596,7 @@ mod tests {
         ];
 
         for (category, expected) in categories.iter().zip(expected_strings.iter()) {
-            assert_eq!(arxiv_category_to_string(category), *expected);
+            assert_eq!(arxiv_category(category), *expected);
         }
         
         
