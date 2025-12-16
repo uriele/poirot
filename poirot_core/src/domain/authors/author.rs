@@ -1,32 +1,49 @@
-use thiserror::Error;
-use crate::domain::affiliation::Affiliation;
-#[derive(Debug, Clone, PartialEq, Eq)]
+
+use crate::{domain::authors::{affiliation::Affiliation, author_error::AuthorError, orcid::Orcid
+}, utils::{normalize_to_lowercase, capitalize_first_letter}};
+use uuid::Uuid;
+#[derive(Debug, Clone, PartialEq, Eq,Hash)]
 pub struct Name {
-    pub first: String,
-    pub middle: Option<String>,
-    pub last: String,
+    first: String,
+    middle: Option<String>,
+    last: String,
 }
 
 impl Name {
     pub fn builder() -> NameBuilder {
         NameBuilder::default()
     }
+
+    pub fn first(&self) -> String {
+        capitalize_first_letter(&self.first)
+    }
+
+    pub fn middle(&self) -> Option<String> {
+        match &self.middle {
+            Some(m) => Some(capitalize_first_letter(m)),
+            None => None,
+        }
+    }
+
+    pub fn last(&self) -> String {
+        capitalize_first_letter(&self.last)
+    }
+    
+
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Orcid(String);
-
-impl Orcid{
-    fn parse(orcid_str: &str) -> Result<Self, AuthorError> {
-        // Simple validation logic for ORCID
-        let parts: Vec<&str> = orcid_str.split('-').collect();
-        if parts.len() != 4 || !parts.iter().all(|part| part.len() == 4 && part.chars().all(|c| c.is_digit(10))) {
-            return Err(AuthorError::InvalidOrcid);
+impl ToString for Name {
+    fn to_string(&self) -> String {
+        let mut s: String = capitalize_first_letter(&self.first);
+        if let Some(middle) = &self.middle {
+            s.push_str(" ");
+            s.push_str(&capitalize_first_letter(&middle));
         }
-        Ok(Orcid(orcid_str.to_string()))
+        s.push_str(" ");
+        s.push_str(&capitalize_first_letter(&self.last));
+        s
     }
 }
-
 
 #[derive(Debug, Default)]
 pub struct NameBuilder {
@@ -39,7 +56,7 @@ impl NameBuilder {
     pub fn first(mut self, first: impl Into<String>) -> Self {
         self.first = match first.into().as_str() {
             "" => None,
-            s => Some(s.to_string()),
+            s => Some(normalize_to_lowercase(s)),
         };
         self
     }
@@ -47,7 +64,7 @@ impl NameBuilder {
     pub fn middle(mut self, middle: impl Into<String>) -> Self {
         self.middle = match middle.into().as_str() {
             "" => None,
-            s => Some(s.to_string()),
+            s => Some(normalize_to_lowercase(s)),
         };
         self
     }
@@ -55,7 +72,7 @@ impl NameBuilder {
     pub fn last(mut self, last: impl Into<String>) -> Self {
         self.last = match last.into().as_str() {
             "" => None,
-            s => Some(s.to_string()),
+            s => Some(normalize_to_lowercase(s)),
         };
         self
     }
@@ -73,17 +90,32 @@ impl NameBuilder {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq,Hash)]
 pub struct Author {
     pub name: Name,
     pub orcid: Option<Orcid>,
     pub affiliation: Option<Affiliation>,
     pub tags: Vec<String>,
+    // Primary/internal identifier (DB key)
+    // Used if orcid is unavailable;
+    pub id: Uuid
 }
 
 impl Author {
     pub fn builder() -> AuthorBuilder {
         AuthorBuilder::default()
+    }
+}
+
+impl Into<String> for Author {
+    fn into(self) -> String{
+        self.name.to_string()
+    }
+}
+
+impl ToString for Author {
+    fn to_string(&self) -> String {
+        self.name.to_string()
     }
 }
 
@@ -154,6 +186,9 @@ impl AuthorBuilder {
         let orcid =self.orcid;
         let affiliation = self.affiliation;
         let tags = self.tags;
+
+        // works only with std activated otherwise need to provide Timestamp
+        let id = Uuid::now_v7();
         
         Ok(
             Author {
@@ -161,29 +196,10 @@ impl AuthorBuilder {
             orcid,
             affiliation,
             tags,
+            id
         })
     }
 }
-
-
-
-
-
-#[derive(Error, Debug, PartialEq, Eq)]
-pub enum AuthorError {
-    #[error("Invalid ORCID format")]
-    InvalidOrcid,
-    #[error("Missing author name")]
-    MissingName,
-    #[error("Affiliation parsing error")]
-    AffiliationParsingError,
-    #[error("General author error: {0}")]
-    General(String),
-}
-
-
-
-
 
 
 
@@ -209,10 +225,10 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(author.name.first, "Jane");
-        assert_eq!(author.name.last, "Smith");
+        assert_eq!(author.name.first(), "Jane");
+        assert_eq!(author.name.last(), "Smith");
         assert_eq!(author.orcid.unwrap().0, "0000-0001-2345-6789");
-        assert_eq!(author.affiliation.unwrap().institution.unwrap(), "University X");
+        assert_eq!(author.affiliation.unwrap().institution.unwrap(), "university x");
         assert_eq!(author.tags, vec!["Physics", "Astronomy"]);
     }
 
@@ -242,9 +258,9 @@ mod tests {
         assert_eq!(
             name,
             Name {
-                first: "John".to_string(),
-                middle: Some("H.".to_string()),
-                last: "Doe".to_string(),
+                first: "john".to_string(),
+                middle: Some("h.".to_string()),
+                last: "doe".to_string(),
             }
         );
     }
@@ -259,6 +275,44 @@ mod tests {
     fn test_name_builder_missing_last() {
         let result = Name::builder().first("John").build();
         assert_eq!(result, Err(AuthorError::MissingName));
+    }
+
+    // test into for Name and Authors
+    #[test]
+    fn test_into_string_for_name() {
+        let name = Name::builder()
+            .first("John")
+            .middle("H.")
+            .last("Doe")
+            .build()
+            .unwrap();
+
+        assert_eq!(name.to_string(),"John H. Doe".to_string())
+    }
+    #[test]
+    fn test_into_string_for_author() {
+        let name = Name::builder()
+            .first("John")
+            .middle("H.")
+            .last("Doe")
+            .build()
+            .unwrap();
+        assert_eq!(
+            name,
+            Name {
+                first: "john".to_string(),
+                middle: Some("h.".to_string()),
+                last: "doe".to_string(),
+            }
+        );
+        
+        let author = Author::builder()
+            .name(name).unwrap()
+            .build()
+            .unwrap();
+
+
+        assert_eq!(author.to_string(),"John H. Doe".to_string())
     }
 }
 

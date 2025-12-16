@@ -1,0 +1,10 @@
+pub(crate) mod author_error;
+pub mod author;
+pub mod authorgraph;
+pub mod affiliation;
+pub mod orcid;
+pub use author_error::AuthorError;
+pub use author::{Author, Name};
+pub use affiliation::Affiliation;
+pub use orcid::Orcid;
+pub use authorgraph::AuthorGraph;

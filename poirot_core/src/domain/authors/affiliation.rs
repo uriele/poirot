@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+use crate::utils::normalize_to_lowercase;
+
+#[derive(Debug, Clone, PartialEq, Eq,Hash)]
 pub struct Affiliation {
     pub institution: Option<String>,
     pub department: Option<String>,
@@ -11,16 +13,16 @@ impl Affiliation {
         // Simple parsing logic, can be improved with more sophisticated parsing
         let parts: Vec<&str> = affil_str.split(';').map(|s| s.trim()).collect();
         let institution = parts.get(0)
-            .map(|s| s.to_string())
+            .map(|s| normalize_to_lowercase(s))
             .filter(|s| !s.is_empty());
         let department = parts.get(1)
-            .map(|s| s.to_string())
+            .map(|s| normalize_to_lowercase(s))
             .filter(|s| !s.is_empty());
         let address = parts.get(2)
-            .map(|s| s.to_string())
+            .map(|s| normalize_to_lowercase(s))
             .filter(|s| !s.is_empty());
         let country = parts.get(3)
-            .map(|s| s.to_string())
+            .map(|s| normalize_to_lowercase(s))
             .filter(|s| !s.is_empty());
         Affiliation {
             institution,
@@ -32,6 +34,9 @@ impl Affiliation {
     }
 }
 
+
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,18 +45,18 @@ mod tests {
     fn test_affiliation_parse() {
         let affil_str = "University of Example; Department of Testing; 123 Test St; Testland";
         let affil = Affiliation::parse(affil_str);
-        assert_eq!(affil.institution.unwrap(), "University of Example");
-        assert_eq!(affil.department.unwrap(), "Department of Testing");
-        assert_eq!(affil.address.unwrap(), "123 Test St");
-        assert_eq!(affil.country.unwrap(), "Testland");
+        assert_eq!(affil.institution.unwrap(), "University of Example".to_lowercase());
+        assert_eq!(affil.department.unwrap(), "Department of Testing".to_lowercase());
+        assert_eq!(affil.address.unwrap(), "123 Test St".to_lowercase());
+        assert_eq!(affil.country.unwrap(), "Testland".to_lowercase());
 
         let affil_str_partial = "Institute of Samples; ;456 Sample Rd";
         let affil_partial = Affiliation::parse(affil_str_partial);
 
         println!("{:?}", affil_partial);
-        assert_eq!(affil_partial.institution.unwrap(), "Institute of Samples");
+        assert_eq!(affil_partial.institution.unwrap(), "Institute of Samples".to_lowercase());
         assert!(affil_partial.department.is_none());
-        assert_eq!(affil_partial.address.unwrap(), "456 Sample Rd");
+        assert_eq!(affil_partial.address.unwrap(), "456 Sample Rd".to_lowercase());
         assert!(affil_partial.country.is_none());
     }
 }

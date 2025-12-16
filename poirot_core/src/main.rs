@@ -5,7 +5,7 @@ use gpui::{
 };
 */
 use cozo::ScriptMutability;
-use poirot::database::{Engine,
+use poirot_core::database::{Engine,
     AcademicResourceManager};
 
 use log::{info}; // logging
