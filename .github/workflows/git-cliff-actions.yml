@@ -16,14 +16,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      
       - name: Generate a changelog
-        id: git-cliff
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
-          args: --verbose --strip footer --exclude-path ".github/**" --tag 0.0.0
+          args: --verbose
         env:
           OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
 
       - name: Print the changelog
         run: cat "${{ steps.git-cliff.outputs.changelog }}"
