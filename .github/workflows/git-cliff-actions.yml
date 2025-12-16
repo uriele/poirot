@@ -25,9 +25,3 @@ jobs:
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
-
-      - name: Print the changelog
-        run: cat "${{ steps.git-cliff.outputs.changelog }}"
-
-      - name: Print the version
-        run: echo "${{ steps.git-cliff.outputs.version }}"
