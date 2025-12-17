@@ -8,7 +8,7 @@ pub use authors::{
     Author, Name,Orcid,
     Affiliation,AuthorError,
 };
-pub use library_items::{
+pub use crate::domain::library_items::{
     Title,Pages,Doi,Uri,
     LibraryItemType,
 };
