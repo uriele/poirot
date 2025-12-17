@@ -40,8 +40,8 @@ impl Title{
 
         let title_str= title_str.trim()
             .split_whitespace()
+            .filter(|s| !s.is_empty()) // map does not affect empty string better to filter first
             .map(|s| s.to_lowercase())
-            .filter(|s| !s.is_empty())
             .collect::<Vec<String>>()
             .join(" ");
 
