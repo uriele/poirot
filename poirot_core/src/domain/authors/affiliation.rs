@@ -1,4 +1,4 @@
-use crate::utils::normalize_to_lowercase;
+use crate::utils::normalize_and_filter;
 
 #[derive(Debug, Clone, PartialEq, Eq,Hash)]
 pub struct Affiliation {
@@ -8,22 +8,20 @@ pub struct Affiliation {
     pub country: Option<String>,
 }
 
+
+
 impl Affiliation {
     pub fn parse(affil_str: &str) -> Self {
         // Simple parsing logic, can be improved with more sophisticated parsing
         let parts: Vec<&str> = affil_str.split(';').map(|s| s.trim()).collect();
         let institution = parts.get(0)
-            .map(|s| normalize_to_lowercase(s))
-            .filter(|s| !s.is_empty());
+            .and_then(|s| normalize_and_filter(s));
         let department = parts.get(1)
-            .map(|s| normalize_to_lowercase(s))
-            .filter(|s| !s.is_empty());
+            .and_then(|s| normalize_and_filter(s));
         let address = parts.get(2)
-            .map(|s| normalize_to_lowercase(s))
-            .filter(|s| !s.is_empty());
+            .and_then(|s| normalize_and_filter(s));
         let country = parts.get(3)
-            .map(|s| normalize_to_lowercase(s))
-            .filter(|s| !s.is_empty());
+            .and_then(|s| normalize_and_filter(s));
         Affiliation {
             institution,
             department,

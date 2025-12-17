@@ -1,4 +1,5 @@
-use crate::services::provider::arxiv_text;
+
+use super::constants::{arxiv_text};
 use std::sync::OnceLock;
 use fancy_regex::Regex;
 use crate::domain::errors::QueryError;
@@ -235,6 +236,78 @@ pub fn parse_arxiv_query_body(query_body: &str) -> Result<String,QueryError> {
 
     Ok(out)
 }
+
+
+
+pub fn arxiv_category_to_text(category: &arxiv_text::Categories) -> &'static str{
+    match category{
+        arxiv_text::Categories::ComputerScience(cs_cat) => arxiv_text::computer_science(cs_cat),
+        arxiv_text::Categories::Economics(econ_cat) => arxiv_text::economics(econ_cat),
+        arxiv_text::Categories::ElectricalEngineeringAndSystemsScience(eess_cat) => arxiv_text::eess(eess_cat),
+        arxiv_text::Categories::Mathematics(math_cat) => arxiv_text::mathematics(math_cat),
+        arxiv_text::Categories::Physics(phys_cat) => arxiv_text::physics_category(phys_cat),
+        arxiv_text::Categories::QuantitativeBiology(qbio_cat) => arxiv_text::quantitative_biology(qbio_cat),
+        arxiv_text::Categories::QuantitativeFinance(qfin_cat) => arxiv_text::quantitative_finance(qfin_cat),
+        arxiv_text::Categories::Statistics(stat_cat) => arxiv_text::statistics(stat_cat),
+    }
+}
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::super::constants::arxiv_text::*;
+    use super::*;
+
+    #[test]
+    fn test_all_arxiv_category() {
+        let cs_cat = ComputerScience::AI;
+        let econ_cat = Economics::EM;
+        let eess_cat = ElectricalEngineeringAndSystemsScience::AS;
+        let math_cat = Mathematics::AC;
+        let phys_cat = PhysicsCategory::Astrophysics(Astrophysics::CO);
+        let qbio_cat = QuantitativeBiology::BM;
+        let qfin_cat = QuantitativeFinance::CP;
+        let stat_cat = Statistics::AP;
+
+        let categories = vec![
+            Categories::ComputerScience(cs_cat),
+            Categories::Economics(econ_cat),
+            Categories::ElectricalEngineeringAndSystemsScience(eess_cat),
+            Categories::Mathematics(math_cat),
+            Categories::Physics(phys_cat),
+            Categories::QuantitativeBiology(qbio_cat),
+            Categories::QuantitativeFinance(qfin_cat),
+            Categories::Statistics(stat_cat),
+        ];
+
+        let expected_strings = vec![
+            "cs.AI",
+            "econ.EM",
+            "eess.AS",
+            "math.AC",
+            "astro-ph.CO",
+            "q-bio.BM",
+            "q-fin.CP",
+            "stat.AP",
+        ];
+
+        for (category, expected) in categories.iter().zip(expected_strings.iter()) {
+            assert_eq!(arxiv_category_to_text(category), *expected);
+        }
+        
+        
+    }
+}
+
+
+
+
+
+
+
 
 #[cfg(test)]
 mod test{

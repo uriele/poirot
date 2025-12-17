@@ -1,7 +1,7 @@
 // ...existing code...
 use serde::Deserialize;
 use crate::domain::{errors::QueryError,provider::SearchResult};
-use crate::services::provider::arxiv_text;
+use crate::services::provider::constants::arxiv_text;
 use std::ops::{Deref,DerefMut};
 
 // Use to extract Entries from Feed
@@ -9,12 +9,12 @@ use std::ops::{Deref,DerefMut};
 pub struct ArxivResult {
     // We only care about <entry>...</entry>
     #[serde(rename = "entry", default)]
-    entries: Vec<AtomEntry>,
+    pub entries: Vec<AtomEntry>,
 }
 
 impl SearchResult for ArxivResult{}
 
-fn parse_atom_entries(xml: &str) -> Result<ArxivResult, QueryError> {
+pub fn parse_atom_entries(xml: &str) -> Result<ArxivResult, QueryError> {
         quick_xml::de::from_str(xml).map_err(|e| QueryError::UnexpectedError(e.to_string()))
 }
 

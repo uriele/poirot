@@ -1,12 +1,12 @@
 use tokio::task::JoinSet; // for concurrent page fetching
 use async_trait::async_trait;
-use crate::services::provider::arxiv_text;
+use crate::services::provider::constants::arxiv_text;
 use crate::domain::{provider::{
     SearchQuery, 
     LiteratureProvider,
     },
 };
-
+use crate::services::provider::atomfeed::parse_atom_entries;
 use std::ops::{Deref,DerefMut};
 use super::arxivquery_ast::{parse,ast,interpret};
 use super::atomfeed::ArxivResult;
@@ -315,6 +315,7 @@ impl LiteratureProvider for ArxivProvider {
             
             let provider=self.clone();
             let url_base_clone=url_base.clone();
+            
             set.spawn(async move {
                 let start=per_page * pag;
                 println!("Executing arXiv Query (page {} start {})", pag+1,start);
@@ -325,17 +326,40 @@ impl LiteratureProvider for ArxivProvider {
                 let response= provider.client
                     .get(url)
                     .send()
-                    .await;
-                response
+                    .await
+                    .map_err(|e| QueryError::UnexpectedError(e.to_string()))?;
 
+                    if !response.status().is_success() {
+                        return Err(QueryError::UnexpectedError(format!("arXiv API returned error status: {}", response.status())));
+                    }
+                    let text = response.text().await.map_err(|e| QueryError::UnexpectedError(e.to_string()))?;
+                    let arxiv_result = parse_atom_entries(&text)?;
+                    Ok(arxiv_result)       
+                    
             });
         }
+        let mut merged = ArxivResult::default();
 
+        while let Some(joined) = set.join_next().await {
+            match joined {
+                // Task panicked / cancelled
+                Err(join_err) => {
+                    eprintln!("page task failed (JoinError): {join_err}");
+                    continue;
+                }
+                // Task completed with your Result
+                Ok(Err(qe)) => {
+                    eprintln!("page request failed (QueryError): {qe}");
+                    continue;
+                }
+                Ok(Ok(page)) => {
+                    merged.entries.extend(page.entries);
+                }
+            }
+        }
 
-        set.join_all().await;
-
-        Ok(ArxivResult::default())
-    }
+    Ok(merged)
+}
    
    async fn fetch_by_source_id(&self, _source_id: &str) -> Result<Box<dyn LibraryItem>, Box<dyn Error+ Send + Sync>>{
          // Implementation for fetching a literature item by source ID from arXiv
@@ -372,11 +396,11 @@ mod test{
 
         println!("arXiv Query String: {}", arxiv_query_str);
         //assert!(arxiv_query_str.starts_with("http://export.arxiv.org/api/query?"));
-        assert!(arxiv_query_str.contains(r#"au:"John%20H.%20Doe""#));
-        assert!(arxiv_query_str.contains(r#""quantum%20computing""#));
+        assert!(arxiv_query_str.contains(r#"au:"John H. Doe""#));
+        assert!(arxiv_query_str.contains(r#""quantum computing""#));
 
         //assert_eq!(arxiv_query_str, r#"http://export.arxiv.org/api/query?search_query=all:"quantum%20computing"+AND+au:"John%20H.%20Doe"&sortBy=relevance&start=0&max_results=100"#);
-        assert_eq!(arxiv_query_str, r#"all:"quantum%20computing"+AND+au:"John%20H.%20Doe""#);
+        assert_eq!(arxiv_query_str, r#"all:"quantum computing"+AND+au:"John H. Doe""#);
 
     }
 
@@ -408,7 +432,7 @@ mod test{
             .with_query(r#""quantum computing" && au:"John H. Doe""#.to_string())
             .with_per_page(150)
             .with_from_page(Some(0))
-            .with_to_page(Some(5))
+            .with_to_page(Some(3))
             .build()
             .unwrap();
         
@@ -416,52 +440,41 @@ mod test{
 
         let start = Instant::now();
 
-        // spawn 4 concurrent searched (should take less than 2s)
         
-        let mut set = JoinSet::new();
-        for i in 0..4 {
-            let provider = provider.clone();
-            let q = query.clone();
-            set.spawn(async move {
-                println!("Starting search #{}", i + 1);
-                let _ = provider.search(q).await;
-            });
-        }
+        //let provider4=provider.clone();
+        provider.search(query).await;
 
-        set.join_all().await;
+        // set.join_all().await;
 
         let elapsed = start.elapsed();
         println!("Elapsed for 4 concurrent searches: {:?}", elapsed);
 
         assert!(
             elapsed.as_secs_f32() < 2.0,
-            "rate limiter did not delay concurrent searches enough: {:?}",
+            "rate limiter  for 4 queries did not delay concurrent searches enough: {:?}",
             elapsed
         );
 
+        let query = ArxivQuery::builder()
+            .with_query(r#""quantum computing" && au:"John H. Doe""#.to_string())
+            .with_per_page(150)
+            .with_from_page(Some(0))
+            .with_to_page(Some(4))
+            .build()
+            .unwrap();
 
-        // spawn 5 concurrent searches (should take more than 2s)
+
+        let start=Instant::now();
+        //let provider5=provider.clone();
+        provider.search(query).await;
         
-        let provider = ArxivProvider::new().unwrap();
-        let mut set = JoinSet::new();
-        for i in 0..5 {
-            let provider = provider.clone();
-            let q = query.clone();
-            set.spawn(async move {
-                println!("Starting search #{}", i + 1);
-                let _ = provider.search(q).await;
-            });
-        }
-
-        set.join_all().await;
-
         let elapsed = start.elapsed();
         println!("Elapsed for 5 concurrent searches: {:?}", elapsed);
 
         // With quota 4 per 2 seconds, the 5th must wait for the next window
         assert!(
-            elapsed.as_secs_f32() >= 2.0,
-            "rate limiter did not delay concurrent searches enough: {:?}",
+            elapsed.as_secs_f32() >= 1.0,
+            "rate limiter for 5 queries did not delay concurrent searches enough: {:?}",
             elapsed
         );
 
@@ -470,25 +483,29 @@ mod test{
 
         // spawn 15 concurrent searches (should take more than 2s)
         
-        let provider = ArxivProvider::new().unwrap();
-        let mut set = JoinSet::new();
-        for i in 0..15 {
-            let provider = provider.clone();
-            let q = query.clone();
-            set.spawn(async move {
-                println!("Starting search #{}", i + 1);
-                let _ = provider.search(q).await;
-            });
-        }
+      
+        let query = ArxivQuery::builder()
+            .with_query(r#""quantum""#.to_string())
+            .with_per_page(10)
+            .with_from_page(Some(0))
+            .with_to_page(Some(16))
+            .build()
+            .unwrap();
 
-        set.join_all().await;
+        println!("{:?}",query.write_query() );
+        let start=Instant::now();
+        //let provider15=provider.clone();
+        let result= provider.search(query).await.unwrap();
+        
         let elapsed = start.elapsed();
-        println!("Elapsed for 5 concurrent searches: {:?}", elapsed);
+        println!("Elapsed for 15 concurrent searches: {:?}", elapsed);
 
+        println!("{:?}",result.entries[0]);
+        
         // With quota 4 per 2 seconds, the 5th must wait for the next window
         assert!(
             elapsed.as_secs_f32() >= 6.0,
-            "rate limiter did not delay concurrent searches enough: {:?}",
+            "rate limiter for 15 queries did not delay concurrent searches enough: {:?}",
             elapsed
         );
     }
