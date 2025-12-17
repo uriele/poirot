@@ -8,12 +8,11 @@ pub struct Affiliation {
     pub country: Option<String>,
 }
 
-
-
 impl Affiliation {
     pub fn parse(affil_str: &str) -> Self {
         // Simple parsing logic, can be improved with more sophisticated parsing
-        let parts: Vec<&str> = affil_str.split(';').map(|s| s.trim()).collect();
+        let parts:Vec<&str> = affil_str.split(';')
+            .map(|s| s.trim()).collect();
         let institution = parts.get(0)
             .and_then(|s| normalize_and_filter(s));
         let department = parts.get(1)
