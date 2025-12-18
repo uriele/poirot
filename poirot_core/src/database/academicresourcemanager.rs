@@ -1,11 +1,10 @@
-
+use crate::database::schema::{HNSW_INDEX, SCHEMA};
+use cozo::{DbInstance, ScriptMutability}; // cozo for database
+use log::{error, info}; // logging
 use std::fmt::{self, Display, Formatter};
 use std::path::Path;
 use std::path::PathBuf;
-use cozo::{ DbInstance, ScriptMutability}; // cozo for database
-use log::{info,error}; // logging
-use crate::database::schema::{SCHEMA, HNSW_INDEX};
-pub enum Engine{
+pub enum Engine {
     Mem,
     SQLite,
     RocksDB,
@@ -20,7 +19,7 @@ pub struct AcademicResourceManager {
 impl AcademicResourceManager {
     pub fn new(engine: Engine, path: impl AsRef<Path>) -> Result<Self, cozo::Error> {
         info!("Starting AcademicResourceManager...");
-        let opt="{}";
+        let opt = "{}";
         let _engine = match engine {
             Engine::Mem => "mem",
             Engine::SQLite => "sqlite",
@@ -35,50 +34,40 @@ impl AcademicResourceManager {
             }
         };
         info!("Initializing database...");
-        let db= DbInstance::new(_engine,path,opt)?;
-
-        
-       
+        let db = DbInstance::new(_engine, path, opt)?;
 
         info!("Applying schema...");
         // create migrate the schema
-        db.run_script(
-            SCHEMA,
-            Default::default(),
-            ScriptMutability::Mutable,
-        )
-        .map_err(|e| {
-            error!("Failed to apply schema: {}", e);
-            e
-        })?;
+        db.run_script(SCHEMA, Default::default(), ScriptMutability::Mutable)
+            .map_err(|e| {
+                error!("Failed to apply schema: {}", e);
+                e
+            })?;
 
         info!("Applying HNSW index...");
         // Create HNSW index for vector search
-        db.run_script(
-            HNSW_INDEX,
-            Default::default(),
-            ScriptMutability::Mutable,
-        )
-        .map_err(|e| {
-            error!("Failed to create HNSW index: {}", e);
-            e
-        })?;
+        db.run_script(HNSW_INDEX, Default::default(), ScriptMutability::Mutable)
+            .map_err(|e| {
+                error!("Failed to create HNSW index: {}", e);
+                e
+            })?;
         info!("Database initialized successfully.");
 
-
-
-        Ok(Self{ engine, path: p, db })
+        Ok(Self {
+            engine,
+            path: p,
+            db,
+        })
     }
-    
 
-    pub fn get_path(&self)  {
+    pub fn get_path(&self) {
         match &self.path {
             Some(p) => info!("Database path: {:?}", p),
             None => info!("In-memory database has no path."),
-        }      
+        }
     }
 
-    pub fn get_engine(&self)  {
+    pub fn get_engine(&self) {
         info!("Database engine: {}", self.engine);
     }
 }
@@ -106,13 +95,11 @@ impl Display for AcademicResourceManager {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
 
-    
     fn remove_if_exists(path: &str) {
         if let Err(e) = fs::remove_file(path) {
             // Ignore "not found", rethrow others
@@ -151,7 +138,7 @@ mod tests {
         assert!(arm_rocksdb.path.is_some());
         assert_eq!(arm_rocksdb.path.unwrap(), PathBuf::from(rocks_path));
     }
- #[test]
+    #[test]
     fn test_academic_resource_manager_path_engine() {
         let path = "test1_db_path_engine.db";
         let _ = std::fs::remove_dir_all(path);

@@ -2,12 +2,15 @@
 name = "poirot_core"
 version = "0.2.0"
 edition = "2024"
+# build = "build.rs"
 
 [dependencies]
 # macro to generate builders through derive
 poirot_macro= {version="0.1.0",path="../poirot_macro"}
 
 colorimetry = {version= "0.0.8"}
+io-uring= {version="0.7.11"}
+cozorocks= {version="0.1.7",features = ["io-uring"]}
 cozo = {version="0.7.6", features=["compact","minimal","storage-rocksdb","graph-algo","requests","io-uring"]}
 # Logging
 log  = {version="0.4.28"}
@@ -43,3 +46,11 @@ lazy_static= "1.4.0"
 # used to create AuthorGraph
 petgraph= {version="0.8.3"}
 uuid= {version="1.19.0",features=["v7"]}
+
+[build-dependencies]
+pkg-config = "0.3"
+which = "4.4"
+anyhow = "1.0"
+liburing = "0.0.1"
+[patch.crates-io]
+clang-sys = { version = "1.8.1" , features = ["clang_19_0"] }

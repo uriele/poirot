@@ -1,10 +1,10 @@
-use fancy_regex::Regex;
-use core::error::Error;
 use crate::domain::errors::QueryError;
+use core::error::Error;
+use fancy_regex::Regex;
 const DOI_REGEX: &str = r"^10.(\d{4,9})/([-._;()/:A-Za-z0-9]+)$";
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Doi{
+pub struct Doi {
     pub prefix: String,
     pub suffix: String,
 }
@@ -12,7 +12,11 @@ pub struct Doi{
 impl Doi {
     pub fn parse(doi_str: &str) -> Result<Self, Box<dyn Error>> {
         let captured = Regex::new(DOI_REGEX)
-            .map_err(|_| Box::new(QueryError::UnexpectedError("Failed to compile DOI regex".to_string())))?
+            .map_err(|_| {
+                Box::new(QueryError::UnexpectedError(
+                    "Failed to compile DOI regex".to_string(),
+                ))
+            })?
             .captures(doi_str)?;
 
         if let Some(captures) = captured {
@@ -21,19 +25,19 @@ impl Doi {
                 suffix: captures.get(2).unwrap().as_str().to_string(),
             })
         } else {
-            Err(Box::new(QueryError::UnexpectedError(format!("Invalid DOI format: {}", doi_str))))
+            Err(Box::new(QueryError::UnexpectedError(format!(
+                "Invalid DOI format: {}",
+                doi_str
+            ))))
         }
     }
-
 }
-
 
 impl ToString for Doi {
     fn to_string(&self) -> String {
         format!("10.{}/{}", self.prefix, self.suffix)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -43,15 +47,18 @@ mod tests {
         use rand::Rng;
         let mut rng = rand::rng();
         let len: usize = rng.random_range(4..=9);
-        (0..len).map(|_| rng.random_range(0..10).to_string()).collect()
+        (0..len)
+            .map(|_| rng.random_range(0..10).to_string())
+            .collect()
     }
 
     fn generate_valid_suffix() -> String {
         use rand::Rng;
         let mut rng = rand::rng();
-        let chars: Vec<char> = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._;()/:"
-            .chars()
-            .collect();
+        let chars: Vec<char> =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._;()/:"
+                .chars()
+                .collect();
         let len: usize = rng.random_range(1..=20);
         (0..len)
             .map(|_| chars[rng.random_range(0..chars.len())])
@@ -68,22 +75,25 @@ mod tests {
     }
 
     #[test]
-    fn test_doi_parse_valid(){
+    fn test_doi_parse_valid() {
         let prefixs = Vec::from_iter((0..10).map(|_| generate_valid_prefix()));
         let suffixs = Vec::from_iter((0..10).map(|_| generate_valid_suffix()));
 
-        let doi_str = prefixs.iter().zip(suffixs.iter()).map(|(p,s)| format!("10.{}/{}",p,s)).collect::<Vec<String>>();
+        let doi_str = prefixs
+            .iter()
+            .zip(suffixs.iter())
+            .map(|(p, s)| format!("10.{}/{}", p, s))
+            .collect::<Vec<String>>();
 
-        for doi_s in doi_str{
+        for doi_s in doi_str {
             let doi = Doi::parse(&doi_s);
             assert!(doi.is_ok());
-            assert_eq!(doi.unwrap().to_string(),doi_s);
+            assert_eq!(doi.unwrap().to_string(), doi_s);
         }
-
     }
 
     #[test]
-    fn test_doi_parse_invalid(){
+    fn test_doi_parse_invalid() {
         let invalid_dois = vec![
             "10./suffix",
             "10.prefix/",
@@ -95,10 +105,9 @@ mod tests {
             "10.1234/suffix with spaces",
         ];
 
-        for doi_s in invalid_dois{
+        for doi_s in invalid_dois {
             let doi = Doi::parse(doi_s);
             assert!(doi.is_err());
         }
     }
 }
-

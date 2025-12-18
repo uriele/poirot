@@ -1,4 +1,4 @@
 [workspace]
 resolver="3"
-members=["poirot_core", "poirot_gui",
+members=["poirot_core",# "poirot_gui",
         "poirot_macro"]

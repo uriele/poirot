@@ -1,6 +1,6 @@
 pub mod database;
-pub use database::schema::{SCHEMA, HNSW_INDEX};
+pub use database::schema::{HNSW_INDEX, SCHEMA};
 pub mod domain;
 pub mod services;
 pub mod utils;
-pub use domain::{Name,Orcid,Author, AuthorError, Affiliation};
+pub use domain::{Affiliation, Author, AuthorError, Name, Orcid};

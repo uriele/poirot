@@ -10,7 +10,7 @@
 // - arXiv query syntax using `+AND+`, `+OR+`, `+ANDNOT+`
 pub mod ast {
 
-    #[derive(Debug,Default, Clone, Copy, PartialEq, Eq, Hash)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
     pub enum Prefix {
         Au,
         Ti,
@@ -39,53 +39,45 @@ pub mod ast {
 
         pub fn parse(s: &str) -> Self {
             match s {
-                "au"  => Prefix::Au,
-                "ti"  => Prefix::Ti,
+                "au" => Prefix::Au,
+                "ti" => Prefix::Ti,
                 "abs" => Prefix::Abs,
-                "co"  => Prefix::Co,
-                "jr"  => Prefix::Jr,
+                "co" => Prefix::Co,
+                "jr" => Prefix::Jr,
                 "cat" => Prefix::Cat,
-                "rn"  => Prefix::Rn,
+                "rn" => Prefix::Rn,
                 "all" => Prefix::All,
-                _     => Prefix::All, // default to All for unknown prefixes
-                
+                _ => Prefix::All, // default to All for unknown prefixes
             }
         }
     }
 
-    #[derive(Debug,Default, Clone, PartialEq, Eq, Hash)]
+    #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
     pub struct Term {
         pub prefix: Prefix,
         pub value: String,
     }
 
-
-    #[derive(Debug,Default,Clone, PartialEq, Eq, Hash)]
+    #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
     pub enum Expr {
         #[default]
         Empty,
         Term(Term),
-        And(Vec<Expr>),  // and can be in any order
-        Or(Vec<Expr>),   // or can be in any order
+        And(Vec<Expr>),               // and can be in any order
+        Or(Vec<Expr>),                // or can be in any order
         AndNot(Box<Expr>, Box<Expr>), // a !&& b
     }
 
-
     impl Expr {
         pub fn term(prefix: Prefix, value: impl Into<String>) -> Self {
-            let v=value.into();
+            let v = value.into();
             // add empty value
             if v.is_empty() {
                 Expr::Empty
             } else {
-                Expr::Term(Term {
-                    prefix,
-                    value: v,
-                })
-           }
+                Expr::Term(Term { prefix, value: v })
+            }
         }
-
-
 
         pub fn and(lhs: Expr, rhs: Expr) -> Expr {
             match (lhs, rhs) {
@@ -142,7 +134,7 @@ pub mod visit {
 }
 
 pub mod parse {
-    use super::ast::{Expr, Prefix,Term};
+    use super::ast::{Expr, Prefix, Term};
     use crate::services::provider::constants::arxiv_categories;
 
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -234,7 +226,8 @@ pub mod parse {
             }
             matches!(
                 self.peek_char(),
-                Some('(') | Some('"')
+                Some('(')
+                    | Some('"')
                     | Some('a'..='z')
                     | Some('A'..='Z')
                     | Some('0'..='9')
@@ -242,9 +235,8 @@ pub mod parse {
             )
         }
 
-
         /// Pratt parser for binary operators with precedence climbing.
-        
+
         // Operators
 
         // l_bp: left binding power
@@ -257,27 +249,25 @@ pub mod parse {
         ///  &&            |  3   |  4
         /// (implicit AND) |  3   |  4
         /// ---------------|------|------
-        /// 
+        ///
         /// Example:
         /// For input: A && B || C => (A && B) || C
         /// For input: A || B && C => A || (B && C)
-        /// 
+        ///
         /// Use explicit binding powers to enforce precedence and associativity.
         /// (A || B ) && C  => (A || B) && C
         fn parse_bp(&mut self, min_bp: u8) -> Result<Expr, ParseError> {
             self.skip_ws();
-            
-            // Parse left-hand side primary expression, 
+
+            // Parse left-hand side primary expression,
             // if it starts with "(" parse a sub-expression until ")"
             let mut lhs = self.parse_primary()?;
-
 
             loop {
                 self.skip_ws();
                 if self.eof() || self.starts_with(")") {
                     break;
                 }
-
 
                 let (op, l_bp, r_bp) = if self.starts_with("||") {
                     (Op::Or, 1, 2)
@@ -436,7 +426,6 @@ pub mod parse {
         AndNot,
     }
 
-
     // This function is used to expand the Or functions and possibly remove the
     // redundant code. For example for the categories.
     fn terms_only(expr: &Expr) -> Option<Vec<Term>> {
@@ -449,25 +438,25 @@ pub mod parse {
                     Some(
                         items
                             .iter()
-                            .map(|e| match e{
+                            .map(|e| match e {
                                 Expr::Term(t) => t.clone(),
                                 _ => unreachable!(), // mostly to use this macro, I tell the compiler this branch cannot be reached
                             })
-                            .collect()
+                            .collect(),
                     )
                 } else {
                     None
                 }
-            },
+            }
             _ => None,
         }
     }
 
-    // Check if the expression has uniform prefixex. Why? If I want to find a paper in 
+    // Check if the expression has uniform prefixex. Why? If I want to find a paper in
     // all physics, excluded Astro-ph, I can write  ALL_PHYSICS !&& ASTRO-PH and the expansion
     // should be able to ONLY REMOVE the paper in ASTRO-PH category. For this I need a uniform prefix
     fn uniform_prefix(terms: &[Term]) -> Option<Prefix> {
-        let first=terms.first()?.prefix;
+        let first = terms.first()?.prefix;
         if terms.iter().all(|t| t.prefix == first) {
             Some(first)
         } else {
@@ -481,28 +470,25 @@ pub mod parse {
         // If ArXiv supported simple not I could simplify the single term
         // but in this case is better to keep my query slighty more verbose
         // for A !&& B
-        let Expr::Or(mut lhs_items)=lhs else {
+        let Expr::Or(mut lhs_items) = lhs else {
             return None;
         };
 
         // RHS must be a term or OR of terms only
         let rhs_terms = terms_only(&rhs)?;
-        // The all need to have the same prefix for now, complex mixed operatiors 
+        // The all need to have the same prefix for now, complex mixed operatiors
         // are not included
-        let rhs_prefix= uniform_prefix(&rhs_terms)?;
-        let remove: HashSet<String> = rhs_terms
-                        .into_iter()
-                        .map(|t| t.value)
-                        .collect();
-        
-        let lhs_terms= terms_only(&Expr::Or(lhs_items.clone()))?;
-            
-        let lhs_prefix= uniform_prefix(&lhs_terms)?;
+        let rhs_prefix = uniform_prefix(&rhs_terms)?;
+        let remove: HashSet<String> = rhs_terms.into_iter().map(|t| t.value).collect();
+
+        let lhs_terms = terms_only(&Expr::Or(lhs_items.clone()))?;
+
+        let lhs_prefix = uniform_prefix(&lhs_terms)?;
         if lhs_prefix != rhs_prefix {
             return None;
         }
         lhs_items.retain(|it| match it {
-            Expr::Term(t) => !(t.prefix==lhs_prefix && remove.contains(&t.value)),
+            Expr::Term(t) => !(t.prefix == lhs_prefix && remove.contains(&t.value)),
             _ => true,
         });
         let new_lhs = dedup_and_sort(Expr::Or(lhs_items));
@@ -512,97 +498,64 @@ pub mod parse {
         } else {
             Some(Expr::AndNot(Box::new(new_lhs), Box::new(rhs)))
         }
-        
     }
 
+    //helper abstract the transformation function of expand category to avoid rewriting
+    fn expand_category_or(cat: &[&str]) -> Expr {
+        Expr::Or(
+            cat.iter()
+                .map(|c| Expr::term(Prefix::Cat, c.to_string()))
+                .collect(),
+        )
+    }
 
     fn expand_category_macro(value: &str) -> Expr {
-        let v=value.trim().to_ascii_lowercase()
-            .replace(" ","_");
+        let v = value.trim().to_ascii_lowercase().replace(" ", "_");
         match v.as_str() {
-            "cs" | "computer_science" => {
-                let terms: Vec<Expr> = arxiv_categories::CS.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "econ" | "economics" => {
-                let terms: Vec<Expr> = arxiv_categories::ECON.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "eess" | "electrical_engineering_and_systems" | 
-            "electrical_engineering" | "systems" |
-             "systems_engineering" => {
-                let terms: Vec<Expr> = arxiv_categories::EESS.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "math" | "mathematics" => {
-                let terms: Vec<Expr> = arxiv_categories::MATH.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
+            "cs" | "computer_science" => expand_category_or(*arxiv_categories::CS),
+            "econ" | "economics" => expand_category_or(*arxiv_categories::ECON),
+            "eess"
+            | "electrical_engineering_and_systems"
+            | "electrical_engineering"
+            | "systems"
+            | "systems_engineering" => expand_category_or(*arxiv_categories::EESS),
+            "math" | "mathematics" => expand_category_or(*arxiv_categories::MATH),
             "astro-ph" | "astro" | "astrophysics" => {
-                let terms: Vec<Expr> = arxiv_categories::ASTRO_PH.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "cond-mat" | "condensed_matter" => {
-                let terms: Vec<Expr> = arxiv_categories::COND_MAT.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "gr-qc" | 
-            "general_relativity_and_quantum_cosmology" |
-            "general_relativity" | "quantum_cosmology" => {
-                let terms: Vec<Expr> = arxiv_categories::GR_QC.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
+                expand_category_or(*arxiv_categories::ASTRO_PH)
+            }
+            "cond-mat" | "condensed_matter" => expand_category_or(*arxiv_categories::COND_MAT),
+            "gr-qc"
+            | "general_relativity_and_quantum_cosmology"
+            | "general_relativity"
+            | "quantum_cosmology" => expand_category_or(*arxiv_categories::GR_QC),
             "hep" | "high_energy_physics" | "high_energy" => {
-                let terms: Vec<Expr> = arxiv_categories::HEP.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "math-ph" | "mathematical_physics" => {
-                let terms: Vec<Expr> = arxiv_categories::MATH_PH.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
+                expand_category_or(*arxiv_categories::HEP)
+            }
+            "math-ph" | "mathematical_physics" => expand_category_or(*arxiv_categories::MATH_PH),
             "nlin" | "nonlinear_sciences" | "nonlinear" => {
-                let terms: Vec<Expr> = arxiv_categories::NLIN.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "nucl" | "nuclear" | "nuclear_physics" => {
-                let terms: Vec<Expr> = arxiv_categories::NUCL.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "physics" | "physical_sciences" => {
-                let terms: Vec<Expr> = arxiv_categories::PHYSICS.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "quant-ph" | "quantum_physics" => {
-                let terms: Vec<Expr> = arxiv_categories::QUANT_PH.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "q-bio" | "quantitative_biology" => {
-                let terms: Vec<Expr> = arxiv_categories::Q_BIO.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "q-fin" | "quantitative_finance" => {
-                let terms: Vec<Expr> = arxiv_categories::Q_FIN.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
-            "stat" | "statistics" => {
-                let terms: Vec<Expr> = arxiv_categories::STAT.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
+                expand_category_or(*arxiv_categories::NLIN)
+            }
+            "nucl" | "nuclear" | "nuclear_physics" => expand_category_or(*arxiv_categories::NUCL),
+            "physics" | "physical_sciences" => expand_category_or(*arxiv_categories::PHYSICS),
+            "quant-ph" | "quantum_physics" => expand_category_or(*arxiv_categories::QUANT_PH),
+            "q-bio" | "quantitative_biology" => expand_category_or(*arxiv_categories::Q_BIO),
+            "q-fin" | "quantitative_finance" => expand_category_or(*arxiv_categories::Q_FIN),
+            "stat" | "statistics" => expand_category_or(*arxiv_categories::STAT),
             "all_physics" | "all-physics" | "physics_ext" => {
-                let terms: Vec<Expr> = arxiv_categories::PHYSICS_EXT.iter().map(|c| Expr::term(Prefix::Cat, c.clone())).collect();
-                Expr::Or(terms)
-            },
+                expand_category_or(*arxiv_categories::PHYSICS_EXT)
+            }
             _ => {
-                if arxiv_categories::ALL_CATEGORIES.iter()
-                    .any(|c| c.eq_ignore_ascii_case(&value)) {
+                if arxiv_categories::ALL_CATEGORIES
+                    .iter()
+                    .any(|c| c.eq_ignore_ascii_case(&value))
+                {
                     Expr::term(Prefix::Cat, value.to_string())
                 } else {
                     Expr::Empty
                 }
-            },
+            }
         }
     }
-
 
     fn simplify(expr: Expr) -> Expr {
         match expr {
@@ -613,17 +566,15 @@ pub mod parse {
                     return Expr::Empty;
                 }
                 match t.prefix {
-                    Prefix::Cat => {
-                        expand_category_macro(&t.value)
-                    }
-                    _=> Expr::Term(t),
+                    Prefix::Cat => expand_category_macro(&t.value),
+                    _ => Expr::Term(t),
                 }
-            },
+            }
             Expr::And(items) => {
                 let mut flat = Vec::new();
                 for item in items.into_iter().map(simplify) {
                     match item {
-                        Expr::Empty => {},
+                        Expr::Empty => {}
                         // Make And nodes flat by extending children
                         Expr::And(more) => flat.extend(more),
                         other => flat.push(other),
@@ -635,7 +586,7 @@ pub mod parse {
                 let mut flat = Vec::new();
                 for item in items.into_iter().map(simplify) {
                     match item {
-                        Expr::Empty => {},
+                        Expr::Empty => {}
                         // Make Or nodes flat by extending children
                         Expr::Or(more) => flat.extend(more),
                         other => flat.push(other),
@@ -648,12 +599,12 @@ pub mod parse {
                 let right = simplify(*b);
 
                 // Special Cases
-                match (&left,&right) {
+                match (&left, &right) {
                     // 0 !&& X  => 0
                     (&Expr::Empty, _) => return Expr::Empty,
                     // X !&& 0  => X
                     (_, &Expr::Empty) => return left,
-                    _ => {},
+                    _ => {}
                 }
 
                 // Is it reducible?
@@ -662,16 +613,12 @@ pub mod parse {
                 }
 
                 Expr::AndNot(Box::new(left), Box::new(right))
-                
-
             }
         }
     }
 
-
     fn dedup_and_sort(expr: Expr) -> Expr {
         use std::collections::HashSet;
-
 
         //extract items and whether it's an And or Or
         let (is_and, mut items) = match expr {
@@ -681,11 +628,9 @@ pub mod parse {
             other => return other,
         };
 
-
-
         //Remove Empty from Expression
-        items.retain(|e| !matches!(e,Expr::Empty));
-            
+        items.retain(|e| !matches!(e, Expr::Empty));
+
         if items.is_empty() {
             return Expr::Empty;
         };
@@ -739,7 +684,6 @@ pub mod interpret {
                     let left = wrap_if_needed(a, self);
                     let right = wrap_if_needed(b, self);
 
-                    
                     // Make ANDNOT consistent with join_infix "skip empties":
                     // 0 !&& X  => 0 (empty string)
                     if left.is_empty() {
@@ -761,12 +705,12 @@ pub mod interpret {
             Expr::Term(_) => v.visit_expr(expr),
             Expr::Empty => String::new(),
             _ => {
-                    let inner= v.visit_expr(expr);
-                    if inner.is_empty() {
-                        String::new()
-                    } else {
-                        format!("({})", inner)
-                    }
+                let inner = v.visit_expr(expr);
+                if inner.is_empty() {
+                    String::new()
+                } else {
+                    format!("({})", inner)
+                }
             }
         }
     }
@@ -776,7 +720,7 @@ pub mod interpret {
         let mut first = true;
 
         for item in items {
-            let rendered= wrap_if_needed(item,v);
+            let rendered = wrap_if_needed(item, v);
             // If empty it skips the operation
             if rendered.is_empty() {
                 continue;
@@ -835,17 +779,16 @@ mod tests {
     use super::{interpret, parse};
     use crate::services::provider::constants::arxiv_categories;
 
-    use super::ast::{Expr, };
+    use super::ast::Expr;
     #[test]
     fn parses_and_serializes_basic() {
         let expr = parse::parse_expr(r#"ti:"Quantum Mechanics" && au:"John Doe""#).unwrap();
         let s = interpret::to_arxiv_string(&expr);
         assert!(s.contains(r#"ti:"Quantum Mechanics""#));
         assert!(s.contains(r#"au:"John Doe""#));
-        
+
         let re = fancy_regex::Regex::new(r#"^(ti:"Quantum Mechanics"\+AND\+au:"John Doe"|au:"John Doe"\+AND\+ti:"Quantum Mechanics")$"#).unwrap();
         assert!(re.is_match(&s).unwrap());
-
     }
 
     #[test]
@@ -875,7 +818,10 @@ mod tests {
 
     #[test]
     fn complex_expression() {
-        let expr = parse::parse_expr(r#"(ti:"quantum" || ti:"mechanics") && (au:"Einstein" !&& au:"Bohr")"#).unwrap();
+        let expr = parse::parse_expr(
+            r#"(ti:"quantum" || ti:"mechanics") && (au:"Einstein" !&& au:"Bohr")"#,
+        )
+        .unwrap();
         let s = interpret::to_arxiv_string(&expr);
 
         // Expected structure:
@@ -885,18 +831,23 @@ mod tests {
 
         assert!(s.contains(r#"ti:"quantum""#));
         assert!(s.contains(r#"ti:"mechanics""#));
-        let re= fancy_regex::Regex::new(r#"(?:\(ti:"quantum"\+OR\+ti:"mechanics"\)|\(ti:"mechanics"\+OR\+ti:"quantum"\))"#).unwrap();
+        let re = fancy_regex::Regex::new(
+            r#"(?:\(ti:"quantum"\+OR\+ti:"mechanics"\)|\(ti:"mechanics"\+OR\+ti:"quantum"\))"#,
+        )
+        .unwrap();
         assert!(re.is_match(&s).unwrap());
-        assert!(s.contains(r#"(au:"Einstein"+ANDNOT+au:"Bohr")"#)); 
+        assert!(s.contains(r#"(au:"Einstein"+ANDNOT+au:"Bohr")"#));
 
         let re = fancy_regex::Regex::new(r#"^(?:\(.*\)\+AND\+\(au:"Einstein"\+ANDNOT\+au:"Bohr"\)|\(au:"Einstein"\+ANDNOT\+au:"Bohr"\)\+AND\+\(.*\))$"#).unwrap();
 
         assert!(re.is_match(&s).unwrap());
-    }   
+    }
 
     #[test]
     fn test_repetition_deduplication() {
-        let expr = parse::parse_expr(r#"ti:"quantum" && ti:"quantum" || au:"Einstein" && au:"Einstein""#).unwrap();
+        let expr =
+            parse::parse_expr(r#"ti:"quantum" && ti:"quantum" || au:"Einstein" && au:"Einstein""#)
+                .unwrap();
         let s = interpret::to_arxiv_string(&expr);
 
         // Expected structure after deduplication:
@@ -904,19 +855,21 @@ mod tests {
         assert!(s.contains(r#"ti:"quantum""#));
         assert!(s.contains(r#"au:"Einstein""#));
 
-        let re = fancy_regex::Regex::new(r#"^(?:ti:"quantum"\+OR\+au:"Einstein"|au:"Einstein"\+OR\+ti:"quantum")$"#).unwrap();
+        let re = fancy_regex::Regex::new(
+            r#"^(?:ti:"quantum"\+OR\+au:"Einstein"|au:"Einstein"\+OR\+ti:"quantum")$"#,
+        )
+        .unwrap();
         println!("Serialized: {}", s);
         assert!(re.is_match(&s).unwrap());
     }
 
     #[test]
-    fn test_default_expr(){
-        let default_expr=Expr::default();
-        
+    fn test_default_expr() {
+        let default_expr = Expr::default();
+
         assert_eq!(default_expr, Expr::Empty);
     }
 
-    
     #[test]
     fn test_default_expr_is_empty() {
         let default_expr = Expr::default();
@@ -946,18 +899,25 @@ mod tests {
         let expr = parse::parse_expr(r#"cat:"cs" !&& cat:"cs.SY""#).unwrap();
         let s = interpret::to_arxiv_string(&expr);
 
-
         for c in arxiv_categories::CS.iter() {
-            assert!(s.contains(&format!(r#"cat:"{}""#, c)), "Expected to contain cat:\"{}\"", c);
+            assert!(
+                s.contains(&format!(r#"cat:"{}""#, c)),
+                "Expected to contain cat:\"{}\"",
+                c
+            );
         }
         // removed
 
         // contains only 1 cs.SY and the only one is +ANDNOT+cat:"cs.SY"
-        assert_eq!(s.matches(r#"cat:"cs.SY""#).count(), 1, "cat:cs.SY should appear only once. got: {s}");
+        assert_eq!(
+            s.matches(r#"cat:"cs.SY""#).count(),
+            1,
+            "cat:cs.SY should appear only once. got: {s}"
+        );
 
         assert!(s.split_once("+ANDNOT+").is_some());
-        
-        let (left,right) = s.split_once("+ANDNOT+").unwrap();
+
+        let (left, right) = s.split_once("+ANDNOT+").unwrap();
 
         assert!(
             !left.contains(r#"cat:"cs.SY""#),
@@ -967,21 +927,31 @@ mod tests {
             right.contains(r#"cat:"cs.SY""#),
             r#"Expected cat:"cs.SY" in the RHS"#
         );
-
     }
 
     #[test]
     fn test_removes_leaf() {
-        let expr = parse::parse_expr(r#"(ti:"quantum" || ti:"mechanics") !&& ti:"mechanics""#).unwrap();
+        let expr =
+            parse::parse_expr(r#"(ti:"quantum" || ti:"mechanics") !&& ti:"mechanics""#).unwrap();
         let s = interpret::to_arxiv_string(&expr);
 
-        assert!(s.contains(r#"ti:"quantum""#), "Expected to contain ti:\"quantum\"");
-        assert!(s.contains(r#"ti:"mechanics""#), "Expected to contain ti:\"mechanics\"");
+        assert!(
+            s.contains(r#"ti:"quantum""#),
+            "Expected to contain ti:\"quantum\""
+        );
+        assert!(
+            s.contains(r#"ti:"mechanics""#),
+            "Expected to contain ti:\"mechanics\""
+        );
 
         // contains only 1 ti:"mechanics" and the only one is +ANDNOT+ti:"mechanics"
-        assert_eq!(s.matches(r#"ti:"mechanics""#).count(), 1, "ti:\"mechanics\" should appear only once. got: {s}");
+        assert_eq!(
+            s.matches(r#"ti:"mechanics""#).count(),
+            1,
+            "ti:\"mechanics\" should appear only once. got: {s}"
+        );
         assert!(s.split_once("+ANDNOT+").is_some());
-        let (left,right) = s.split_once("+ANDNOT+").unwrap();
+        let (left, right) = s.split_once("+ANDNOT+").unwrap();
         assert!(
             !left.contains(r#"ti:"mechanics""#),
             r#"Expected no ti:"mechanics" in the LHS"#
@@ -990,19 +960,21 @@ mod tests {
             right.contains(r#"ti:"mechanics""#),
             r#"Expected ti:"mechanics" in the RHS"#
         );
-
     }
 
     #[test]
     fn test_to_arxiv_queries_with_limit() {
-        let expr = parse::parse_expr(r#"cat:"cs" || cat:"math" || cat:"physics" || cat:"econ""#).unwrap();
+        let expr =
+            parse::parse_expr(r#"cat:"cs" || cat:"math" || cat:"physics" || cat:"econ""#).unwrap();
         let queries = interpret::to_arxiv_queries_with_limit(&expr, 100);
         assert!(queries.len() > 1, "Expected multiple queries due to limit");
 
         for query in queries {
             println!("Query: {}", query);
-            assert!(query.len() <= 100, "Each query should respect the character limit");
+            assert!(
+                query.len() <= 100,
+                "Each query should respect the character limit"
+            );
         }
-
     }
 }

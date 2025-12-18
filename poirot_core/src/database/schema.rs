@@ -38,8 +38,6 @@ pub const SCHEMA: &str = r#"
 }
 "#;
 
-
-
 pub const HNSW_INDEX: &str = r#"
 ::hnsw create entity_vec:entity_vec_hnsw {
     dim: 768,

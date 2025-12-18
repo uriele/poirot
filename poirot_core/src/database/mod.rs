@@ -1,5 +1,4 @@
-
-pub mod schema;
 pub mod academicresourcemanager;
-pub use schema::{SCHEMA, HNSW_INDEX};
+pub mod schema;
 pub use academicresourcemanager::{AcademicResourceManager, Engine};
+pub use schema::{HNSW_INDEX, SCHEMA};

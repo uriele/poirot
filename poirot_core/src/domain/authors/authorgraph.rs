@@ -1,14 +1,14 @@
-use petgraph::prelude::{GraphMap,UnGraphMap};
 use super::Author;
+use petgraph::prelude::UnGraphMap;
+use std::collections::{BTreeSet, HashMap};
 use uuid::Uuid;
-use std::collections::{HashMap,BTreeSet};
-pub type AuthorId=Uuid;
-#[derive(Debug,Clone,Default)]
-pub struct AuthorGraph{
+pub type AuthorId = Uuid;
+#[derive(Debug, Clone, Default)]
+pub struct AuthorGraph {
     root: AuthorId,
-    authors: HashMap<AuthorId,Author>,
+    authors: HashMap<AuthorId, Author>,
     ordered: BTreeSet<AuthorId>,
-    graph: UnGraphMap<AuthorId,u32>,
+    graph: UnGraphMap<AuthorId, u32>,
 }
 
 // Helper function to get AuthorId from Author
@@ -16,43 +16,42 @@ pub fn author_id(author: &Author) -> AuthorId {
     author.id.clone()
 }
 
-
-impl AuthorGraph{
-    pub fn new(root:Author) -> Self{
-        let root_id =author_id(&root);
-        let mut authors=HashMap::new();
+impl AuthorGraph {
+    pub fn new(root: Author) -> Self {
+        let root_id = author_id(&root);
+        let mut authors = HashMap::new();
         authors.insert(root_id, root);
 
-        let mut ordered=BTreeSet::new();
+        let mut ordered = BTreeSet::new();
         ordered.insert(root_id.clone());
 
-        let mut graph =UnGraphMap::new();
+        let mut graph = UnGraphMap::new();
         graph.add_node(root_id.clone());
 
-        Self{
+        Self {
             root: root_id,
             authors,
             ordered,
-            graph
+            graph,
         }
     }
 
-
-    pub fn root_id(&self) -> &AuthorId{
+    pub fn root_id(&self) -> &AuthorId {
         &self.root
     }
 
-    pub fn graph(&self) -> &UnGraphMap<AuthorId,u32> {
+    pub fn graph(&self) -> &UnGraphMap<AuthorId, u32> {
         &self.graph
     }
 
-    pub fn author_ids_stable(&self) -> impl Iterator<Item= &AuthorId>{
+    pub fn author_ids_stable(&self) -> impl Iterator<Item = &AuthorId> {
         self.ordered.iter()
     }
 
-    pub fn upsert_author(&mut self, author:Author) -> AuthorId {
+    pub fn upsert_author(&mut self, author: Author) -> AuthorId {
         let id = author_id(&author);
         //TODO: finish
+        self.authors.entry(id.clone()).or_insert(author);
         id
     }
 }

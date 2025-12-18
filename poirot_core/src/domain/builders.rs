@@ -1,8 +1,7 @@
-
-pub trait PoirotBuilder: Default{
+pub trait PoirotBuilder: Default {
     type PoirotTarget;
     fn build(&self) -> Result<Self::PoirotTarget, Box<dyn std::error::Error>>;
-    fn new() -> Self{
+    fn new() -> Self {
         Self::default()
     }
 }

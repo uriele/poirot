@@ -5,11 +5,10 @@ use gpui::{
 };
 */
 use cozo::ScriptMutability;
-use poirot_core::database::{Engine,
-    AcademicResourceManager};
+use poirot_core::database::{AcademicResourceManager, Engine};
 
-use log::{info}; // logging
 use env_logger;
+use log::info; // logging
 //use std::io::Write;
 /*
 struct SubWindow {
@@ -250,7 +249,6 @@ impl Render for WindowDemo {
 actions!(window, [Quit]);
 */
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
         .format(|buf, record| {
             use std::io::Write;
@@ -267,14 +265,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO inesert new entries in the database
 
     let query_script = "?[id, kind, title, autors, uri, year, props] <- *entity[id, kind, title, autors, uri, year, props]";
-    let entries = arm
-        .db
-        .run_script(query_script, Default::default(), ScriptMutability::Immutable)?;
+    let entries = arm.db.run_script(
+        query_script,
+        Default::default(),
+        ScriptMutability::Immutable,
+    )?;
     info!("Fetched {} entries", entries.rows.len());
     if let Some(first_entry) = entries.rows.first() {
         info!("First entry sample: {:?}", first_entry);
     }
-
 
     Ok(())
 }

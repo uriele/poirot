@@ -1,11 +1,9 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{self,Data,Fields,};
+use syn::{self, Data, Fields};
 
-
-#[proc_macro_derive(PoirotBuilder, attributes(builder_mandatory,builder_no_method))]
+#[proc_macro_derive(PoirotBuilder, attributes(builder_mandatory, builder_no_method))]
 pub fn poirot_builder_derive(input: TokenStream) -> TokenStream {
-    
     let ast = syn::parse(input).unwrap();
 
     impl_poirot_builder(&ast)
@@ -22,16 +20,20 @@ fn is_option_type(ty: &syn::Type) -> bool {
 
 fn impl_poirot_builder(ast: &syn::DeriveInput) -> TokenStream {
     let name: &syn::Ident = &ast.ident;
-    let builder_name = syn::Ident::new(&format!("{}Builder", name), proc_macro2::Span::call_site());    
+    let builder_name = syn::Ident::new(&format!("{}Builder", name), proc_macro2::Span::call_site());
 
-    let data_struct = match &ast.data{
+    let data_struct = match &ast.data {
         Data::Struct(s) => s,
-        _ => { return quote!{compile_error!("PoirotBuilder can only be derived for structs with named fields")}.into(); }
+        _ => {
+            return quote!{compile_error!("PoirotBuilder can only be derived for structs with named fields")}.into();
+        }
     };
 
-    let fields  = match &data_struct.fields{
+    let fields = match &data_struct.fields {
         Fields::Named(f) => &f.named,
-        _ => { return quote!{compile_error!("PoirotBuilder can only be derived for structs with named fields")}.into(); }
+        _ => {
+            return quote!{compile_error!("PoirotBuilder can only be derived for structs with named fields")}.into();
+        }
     };
 
     let mut mandatory_fields_decls: Vec<proc_macro2::TokenStream> = vec![];
@@ -39,61 +41,55 @@ fn impl_poirot_builder(ast: &syn::DeriveInput) -> TokenStream {
     let mut optional_fields_decls: Vec<proc_macro2::TokenStream> = vec![];
     let mut optional_fields: Vec<proc_macro2::TokenStream> = vec![];
 
-
     let mut with_methods = vec![];
     for field in fields {
-        let ident= match &field.ident {
+        let ident = match &field.ident {
             Some(id) => id.clone(),
             None => continue,
         };
 
-        let ref_ident= &ident;
+        let ref_ident = &ident;
         let ident_type = &field.ty;
 
-        let decl_ident = quote!{#ref_ident: Option<#ident_type>,};
+        let decl_ident = quote! {#ref_ident: Option<#ident_type>,};
 
-        let unwrap_safe_opt = if is_option_type(ident_type){
-            quote!{#ref_ident: self.#ref_ident.clone().unwrap_or(None),}
+        let unwrap_safe_opt = if is_option_type(ident_type) {
+            quote! {#ref_ident: self.#ref_ident.clone().unwrap_or(None),}
         } else {
-            quote!{#ref_ident: self.#ref_ident.clone().unwrap_or_default(),}
-        }; 
-        
+            quote! {#ref_ident: self.#ref_ident.clone().unwrap_or_default(),}
+        };
+
         let mut is_mandatory = false;
         let mut skip_method = false;
-        for attr in &field.attrs{
+        for attr in &field.attrs {
             if attr.path().is_ident("builder_mandatory") {
-                is_mandatory=true;
+                is_mandatory = true;
             } else if attr.path().is_ident("builder_no_method") {
                 skip_method = true;
             }
         }
 
         if !skip_method {
-
-            let method_name = syn::Ident::new(&format!("with_{}", ref_ident.to_string()), proc_macro2::Span::call_site());
-            with_methods.push(
-                quote!{
-                    fn #method_name(mut self, value: #ident_type) -> Self {
-                        self.#ref_ident = Some(value);
-                        self
-                    }
-                }
+            let method_name = syn::Ident::new(
+                &format!("with_{}", ref_ident.to_string()),
+                proc_macro2::Span::call_site(),
             );
+            with_methods.push(quote! {
+                fn #method_name(mut self, value: #ident_type) -> Self {
+                    self.#ref_ident = Some(value);
+                    self
+                }
+            });
         }
-
 
         if is_mandatory {
             mandatory_fields.push(ident);
             mandatory_fields_decls.push(decl_ident.clone());
-
         } else {
             optional_fields.push(unwrap_safe_opt);
             optional_fields_decls.push(decl_ident.clone());
         }
     }
-
-
-
 
     let build_checks = mandatory_fields.iter().map(|field_ident| {
         quote!{
@@ -102,8 +98,8 @@ fn impl_poirot_builder(ast: &syn::DeriveInput) -> TokenStream {
             }
         }
     });
-    
-    quote!{
+
+    quote! {
 
         #[derive(Debug,Default)]
         struct #builder_name {
@@ -114,10 +110,10 @@ fn impl_poirot_builder(ast: &syn::DeriveInput) -> TokenStream {
             #(
                 #optional_fields_decls
             )*
-        }       
+        }
 
         impl #builder_name{
-            
+
             #(#with_methods)*
         }
 
@@ -139,54 +135,49 @@ fn impl_poirot_builder(ast: &syn::DeriveInput) -> TokenStream {
                     )*
                     // For optional fields, set to None if not provided
                     #(
-                        #optional_fields 
+                        #optional_fields
                     )*
                 })
             }
         }
-    }.into()
-
+    }
+    .into()
 }
-
 
 #[proc_macro_derive(LibraryItem, attributes(library_item))]
 pub fn library_item_derive(input: TokenStream) -> TokenStream {
-    
-    let ast= syn::parse(input).unwrap();
+    let ast = syn::parse(input).unwrap();
 
     impl_library_item(&ast)
 }
 
-
-fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
-    let name  = &ast.ident;
-
+fn impl_library_item(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
 
     // Optional fields used for the has_doi, has_website, has_pages fields
     let mut website_field = None::<syn::Ident>;
-    let mut doi_field     = None::<syn::Ident>;
-    let mut pages_field   = None::<syn::Ident>;
-    let mut publication_year_field       = None::<syn::Ident>;
+    let mut doi_field = None::<syn::Ident>;
+    let mut pages_field = None::<syn::Ident>;
+    let mut publication_year_field = None::<syn::Ident>;
 
     // Mandatory common fields: title, authors, source_id
     let mut title_field = Some(syn::Ident::new("title", proc_macro2::Span::call_site()));
     let mut authors_field = Some(syn::Ident::new("authors", proc_macro2::Span::call_site()));
     let mut source_id_field = Some(syn::Ident::new("source_id", proc_macro2::Span::call_site()));
 
-
     // To avoid using the same library_item twice
-    let mut flag_title         = false;
-    let mut flag_authors       = false;
-    let mut flag_source_id     = false;
+    let mut flag_title = false;
+    let mut flag_authors = false;
+    let mut flag_source_id = false;
 
-    let data_struct = match &ast.data{
+    let data_struct = match &ast.data {
         Data::Struct(s) => s,
         _ => {
             return quote!{compile_error!("LibraryItem can only be derived for structs with named fields")}.into();
         }
     };
 
-    let fields  = match &data_struct.fields{
+    let fields = match &data_struct.fields {
         Fields::Named(f) => &f.named,
         _ => {
             return quote!{compile_error!("LibraryItem can only be derived for structs with named fields")}.into();
@@ -218,7 +209,7 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
                         }.into();
                     }
                     website_field = Some(ident.clone());
-                },
+                }
                 "doi" => {
                     if doi_field.is_some() {
                         return quote!{
@@ -226,7 +217,7 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
                         }.into();
                     }
                     doi_field = Some(ident.clone());
-                },
+                }
                 "pages" => {
                     if pages_field.is_some() {
                         return quote!{
@@ -234,7 +225,7 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
                         }.into();
                     }
                     pages_field = Some(ident.clone());
-                },
+                }
                 "publication_year" => {
                     if publication_year_field.is_some() {
                         return quote!{
@@ -242,7 +233,7 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
                         }.into();
                     }
                     publication_year_field = Some(ident.clone());
-                },
+                }
                 "title" => {
                     if flag_title {
                         return quote!{
@@ -251,7 +242,7 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
                     }
                     title_field = Some(ident.clone());
                     flag_title = true;
-                },
+                }
                 "authors" => {
                     if flag_authors {
                         return quote!{
@@ -260,7 +251,7 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
                     }
                     authors_field = Some(ident.clone());
                     flag_authors = true;
-                },
+                }
                 "source_id" => {
                     if flag_source_id {
                         return quote!{
@@ -269,7 +260,7 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
                     }
                     source_id_field = Some(ident.clone());
                     flag_source_id = true;
-                },
+                }
                 _ => (),
             }
         }
@@ -278,7 +269,9 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
     // make sure the mandatory fields exist
 
     if let Some(title_ident) = title_field {
-        let found: bool = fields.iter().any(|f| f.ident.as_ref().map(|i| i == &title_ident).unwrap_or(false));
+        let found: bool = fields
+            .iter()
+            .any(|f| f.ident.as_ref().map(|i| i == &title_ident).unwrap_or(false));
         if !found {
             return quote!{
                 compile_error!("LibraryItem: mandatory field title is required, it is possible to rename it using #[library_item(title)]")
@@ -287,7 +280,12 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
     }
 
     if let Some(authors_ident) = authors_field {
-        let found: bool = fields.iter().any(|f| f.ident.as_ref().map(|i| i == &authors_ident).unwrap_or(false));
+        let found: bool = fields.iter().any(|f| {
+            f.ident
+                .as_ref()
+                .map(|i| i == &authors_ident)
+                .unwrap_or(false)
+        });
         if !found {
             return quote!{
                 compile_error!("LibraryItem: mandatory field authors is required, it is possible to rename it using #[library_item(authors)]")
@@ -296,70 +294,78 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
     }
 
     if let Some(source_id_ident) = source_id_field {
-        let found: bool = fields.iter().any(|f| f.ident.as_ref().map(|i| i == &source_id_ident).unwrap_or(false));
+        let found: bool = fields.iter().any(|f| {
+            f.ident
+                .as_ref()
+                .map(|i| i == &source_id_ident)
+                .unwrap_or(false)
+        });
         if !found {
             return quote!{
                 compile_error!("LibraryItem: mandatory field source_id is required, it is possible to rename it using #[library_item(source_id)]")
             }.into();
         }
     }
-     
+
     let (has_doi_method, doi_eq) = if let Some(ref doi_ident) = doi_field {
-        (quote!{
-            fn has_doi(&self) -> bool {
-                self.#doi_ident.is_some()
-            }
-        },
-        quote!{
-            && if self.has_doi() {
-                self.#doi_ident == other.#doi_ident
-            } else {
-                true
-            }
-        }
+        (
+            quote! {
+                fn has_doi(&self) -> bool {
+                    self.#doi_ident.is_some()
+                }
+            },
+            quote! {
+                && if self.has_doi() {
+                    self.#doi_ident == other.#doi_ident
+                } else {
+                    true
+                }
+            },
         )
     } else {
-        (quote!{}, quote!{})
+        (quote! {}, quote! {})
     };
 
     let (has_website_method, website_eq) = if let Some(ref website_ident) = website_field {
-        (quote!{
-            fn has_website(&self) -> bool {
-                self.#website_ident.is_some()
-            }
-        },
-        quote!{
-            && if self.has_website() {
-                self.#website_ident == other.#website_ident
-            } else {
-                true    
-            }
-        }
+        (
+            quote! {
+                fn has_website(&self) -> bool {
+                    self.#website_ident.is_some()
+                }
+            },
+            quote! {
+                && if self.has_website() {
+                    self.#website_ident == other.#website_ident
+                } else {
+                    true
+                }
+            },
         )
     } else {
-        (quote!{}, quote!{})
+        (quote! {}, quote! {})
     };
 
     let (has_pages_method, pages_eq) = if let Some(ref pages_ident) = pages_field {
-        (quote!{
-            fn has_pages(&self) -> bool {               
-                let (start, end) = (self.pages.0, self.pages.1); // or &self.pages
-                start.is_some() && end.is_some()
-            }
-        },
-        quote!{
-            && if self.has_pages() {
-                self.#pages_ident == other.#pages_ident
-            } else {
-                true
-            }
-        }
+        (
+            quote! {
+                fn has_pages(&self) -> bool {
+                    let (start, end) = (self.pages.0, self.pages.1); // or &self.pages
+                    start.is_some() && end.is_some()
+                }
+            },
+            quote! {
+                && if self.has_pages() {
+                    self.#pages_ident == other.#pages_ident
+                } else {
+                    true
+                }
+            },
         )
     } else {
-        (quote!{}, quote!{})
+        (quote! {}, quote! {})
     };
 
-    quote!{
+    quote! {
         impl LibraryItem for #name {
             #has_doi_method
             #has_website_method
@@ -378,5 +384,6 @@ fn impl_library_item(ast: &syn::DeriveInput) ->TokenStream {
         }
 
         impl Eq for #name {}
-    }.into()
+    }
+    .into()
 }

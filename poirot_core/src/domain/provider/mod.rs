@@ -1,4 +1,4 @@
-pub mod traits;
 pub mod queries;
-pub use traits::{LiteratureProvider};
+pub mod traits;
 pub use queries::{SearchQuery, SearchResult};
+pub use traits::LiteratureProvider;

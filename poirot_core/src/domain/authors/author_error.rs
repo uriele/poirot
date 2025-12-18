@@ -8,8 +8,6 @@ pub enum AuthorError {
     MissingName,
     #[error("Affiliation parsing error")]
     AffiliationParsingError,
-    #[error("General author error: {0}")]
-    General(String),
+    #[error("Unexpected author error: {0}")]
+    UnexpectedError(String),
 }
-
-
