@@ -1,6 +1,7 @@
 use crate::domain::errors::QueryError;
 use core::error::Error;
 use fancy_regex::Regex;
+use std::sync::OnceLock;
 const DOI_REGEX: &str = r"^10.(\d{4,9})/([-._;()/:A-Za-z0-9]+)$";
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -11,19 +12,29 @@ pub struct Doi {
 
 impl Doi {
     pub fn parse(doi_str: &str) -> Result<Self, Box<dyn Error>> {
-        let captured = Regex::new(DOI_REGEX)
+
+        static RE_ESCAPED: OnceLock<Regex> = OnceLock::new();
+        let captured =RE_ESCAPED.get_or_init(|| Regex::new(DOI_REGEX)
             .map_err(|_| {
                 Box::new(QueryError::UnexpectedError(
                     "Failed to compile DOI regex".to_string(),
                 ))
-            })?
+            }).unwrap_or_else(|_| panic!("Failed to compile DOI regex")))
             .captures(doi_str)?;
 
         if let Some(captures) = captured {
-            Ok(Doi {
-                prefix: captures.get(1).unwrap().as_str().to_string(),
-                suffix: captures.get(2).unwrap().as_str().to_string(),
-            })
+                let prefix: Option<String> =captures.get(1).map(|v| v.as_str().into());
+                let suffix: Option<String>= captures.get(2).map(|v| v.as_str().into());
+                match (prefix, suffix) {
+                    (Some(p), Some(s)) => Ok(Doi {
+                        prefix: p,
+                        suffix: s,
+                    }),                   
+                    _ => Err(Box::new(QueryError::UnexpectedError(format!(
+                        "Invalid DOI format: {}",
+                        doi_str
+                    )))),
+                }
         } else {
             Err(Box::new(QueryError::UnexpectedError(format!(
                 "Invalid DOI format: {}",
@@ -33,11 +44,13 @@ impl Doi {
     }
 }
 
-impl ToString for Doi {
-    fn to_string(&self) -> String {
-        format!("10.{}/{}", self.prefix, self.suffix)
+
+impl std::fmt::Display for Doi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "10.{}/{}", self.prefix, self.suffix)
     }
 }
+
 
 #[cfg(test)]
 mod tests {

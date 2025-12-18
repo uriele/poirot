@@ -31,6 +31,7 @@ impl Affiliation {
             country,
         }
     }
+}
 
 #[cfg(test)]
 mod tests {

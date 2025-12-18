@@ -91,7 +91,7 @@ impl Default for QueryBody {
 }
 
 impl QueryBody {
-    pub fn parse(s: String) -> Result<Self, QueryError> {
+    pub fn parse(s: &str) -> Result<Self, QueryError> {
         let expr = parse::parse_expr(&s).map_err(|e| {
             QueryError::WrongFormatting(format!(
                 "Failed to parse arXiv query body: {}",
@@ -174,7 +174,7 @@ impl Default for ArxivQuery {
     }
 }
 
-fn tonow() -> u64 {
+fn to_now() -> u64 {
     let now = time::OffsetDateTime::now_utc();
 
     // Format: YYYYMMDDHHmm (hours + minutes)
@@ -189,7 +189,7 @@ fn tonow() -> u64 {
         .unwrap()
 }
 
-const FROMBEGINNING: u64 = 190001010000;
+const FROM_BEGINNING: u64 = 190001010000;
 
 fn sort_by_to_string(sort_by: &SortBy) -> String {
     match sort_by {
@@ -222,8 +222,8 @@ impl ArxivQuery {
                     arxiv_text::SUBMITTED_DATE,
                     format!(
                         "{}+TO+{}",
-                        from_date.unwrap_or(FROMBEGINNING),
-                        to_date.unwrap_or(tonow())
+                        from_date.unwrap_or(FROM_BEGINNING),
+                        to_date.unwrap_or(to_now())
                     )
                 )
             }
@@ -260,7 +260,7 @@ impl ArxivQueryBuilder {
         }
         self
     }
-    pub fn with_query(mut self, query: String) -> Self {
+    pub fn with_query(mut self, query: &str) -> Self {
         let parsed_query = QueryBody::parse(query).ok();
         self.query = parsed_query;
         self
@@ -400,7 +400,7 @@ mod test {
     #[test]
     fn test_build_arxiv_query() {
         let query = ArxivQuery::builder()
-            .with_query(r#""quantum computing" && au:"John H. Doe""#.to_string())
+            .with_query(r#""quantum computing" && au:"John H. Doe""#)
             .with_per_page(150)
             .with_to_page(Some(1))
             .build()
@@ -425,7 +425,7 @@ mod test {
     async fn test_body() {
         let provider = ArxivProvider::new().unwrap();
         let query = ArxivQuery::builder()
-            .with_query(r#""quantum computing" && au:"John H. Doe""#.to_string())
+            .with_query(r#""quantum computing" && au:"John H. Doe""#)
             .with_per_page(150)
             .with_from_page(Some(1))
             .build()
@@ -442,7 +442,7 @@ mod test {
 
         // build a single shared, read‑only query
         let query = ArxivQuery::builder()
-            .with_query(r#""quantum computing" && au:"John H. Doe""#.to_string())
+            .with_query(r#""quantum computing" && au:"John H. Doe""#)
             .with_per_page(150)
             .with_from_page(Some(0))
             .with_to_page(Some(3))
@@ -468,7 +468,7 @@ mod test {
         );
 
         let query = ArxivQuery::builder()
-            .with_query(r#""quantum computing" && au:"John H. Doe""#.to_string())
+            .with_query(r#""quantum computing" && au:"John H. Doe""#)
             .with_per_page(150)
             .with_from_page(Some(0))
             .with_to_page(Some(4))
@@ -492,7 +492,7 @@ mod test {
         // spawn 15 concurrent searches (should take more than 2s)
 
         let query = ArxivQuery::builder()
-            .with_query(r#""quantum""#.to_string())
+            .with_query(r#""quantum""#)
             .with_per_page(10)
             .with_from_page(Some(0))
             .with_to_page(Some(16))

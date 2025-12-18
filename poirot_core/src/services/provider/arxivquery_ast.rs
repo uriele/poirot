@@ -786,7 +786,7 @@ mod tests {
         let s = interpret::to_arxiv_string(&expr);
         assert!(s.contains(r#"ti:"Quantum Mechanics""#));
         assert!(s.contains(r#"au:"John Doe""#));
-
+        
         let re = fancy_regex::Regex::new(r#"^(ti:"Quantum Mechanics"\+AND\+au:"John Doe"|au:"John Doe"\+AND\+ti:"Quantum Mechanics")$"#).unwrap();
         assert!(re.is_match(&s).unwrap());
     }

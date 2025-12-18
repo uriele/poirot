@@ -3,7 +3,7 @@ use crate::domain::{errors::QueryError, provider::SearchResult};
 use crate::services::provider::constants::arxiv_text;
 use serde::Deserialize;
 use std::ops::{Deref, DerefMut};
-
+use std::sync::OnceLock;
 // Use to extract Entries from Feed
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct ArxivResult {
@@ -41,8 +41,10 @@ fn normalize_abs_id(id_url: &str) -> Result<(String, Option<String>), QueryError
         ))?
         .trim();
 
-    let regex_remove_version = fancy_regex::Regex::new(r"^(?P<id>.+?)(?P<version>v\d+)?$")
-        .map_err(|e| QueryError::UnexpectedError(e.to_string()))?;
+    static REGEX_REMOVE_VERSION: OnceLock<fancy_regex::Regex> = OnceLock::new();
+    let regex_remove_version = REGEX_REMOVE_VERSION.get_or_init(|| {
+        fancy_regex::Regex::new(r"^(?P<id>.+?)(?P<version>v\d+)?$").expect("Failed to compile regex")
+    });
     let caps = regex_remove_version
         .captures(tail)
         .map_err(|e| QueryError::UnexpectedError(e.to_string()))?

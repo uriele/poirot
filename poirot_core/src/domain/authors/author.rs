@@ -55,6 +55,7 @@ pub struct NameBuilder {
     last: Option<String>,
 }
 
+
 impl NameBuilder {
     pub fn first(mut self, first: impl Into<String>) -> Self {
         self.first = match first.into().as_str() {
@@ -123,6 +124,13 @@ pub struct AuthorBuilder {
     tags: Vec<String>,
 }
 
+
+mod indexing {
+    pub const FIRST: usize = 0;
+    pub const MIDDLEORLAST: usize = 1;
+    pub const LAST: usize = 2;
+}
+
 impl AuthorBuilder {
     pub fn name(mut self, name: Name) -> Result<Self, AuthorError> {
         self.name = Some(name);
@@ -136,13 +144,13 @@ impl AuthorBuilder {
         }
         let name: Name = match name_parts.len() {
             2 => Name::builder()
-                .first(name_parts[0])
-                .last(name_parts[1])
+                .first(name_parts[indexing::FIRST])
+                .last(name_parts[indexing::MIDDLEORLAST])
                 .build()?,
             3 => Name::builder()
-                .first(name_parts[0])
-                .middle(name_parts[1])
-                .last(name_parts[2])
+                .first(name_parts[indexing::FIRST])
+                .middle(name_parts[indexing::MIDDLEORLAST])
+                .last(name_parts[indexing::LAST])
                 .build()?,
             _ => return Err(AuthorError::MissingName),
         };
