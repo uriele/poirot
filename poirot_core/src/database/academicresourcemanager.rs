@@ -160,4 +160,23 @@ mod tests {
         assert!(display_str.contains("SQLite"));
         assert!(display_str.contains(path));
     }
+
+    #[test]
+    fn test_academic_resource_add_entries() {
+        let arm = AcademicResourceManager::new(Engine::Mem, ":memory:").unwrap();
+
+
+        let query_script = format!("?[] <- *entity{{id:{}, kind:{}, title:{}, authors:{}}}",
+            "'1'", "'paper'", "'A Study on Testing'", "'Alice, Bob'"
+        );
+
+        println!("Running query: {}", query_script);
+        let query_result = arm
+            .db
+            .run_script(query_script.as_str(), Default::default(), ScriptMutability::Immutable);
+       
+        //assert!(query_result.is_ok());
+        let rows = query_result.unwrap().rows;
+        assert_eq!(rows.len(), 2);
+    }
 }

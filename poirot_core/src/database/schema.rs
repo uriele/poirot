@@ -6,9 +6,9 @@ pub const SCHEMA: &str = r#"
     kind: String,          
     title: String,        
     autors: String,   
-    uri: String?,          
-    year: Int?,           
-    props: Json?      
+    uri: String,          
+    year: Int,           
+    props: Json      
 }
 
 :create edge {
@@ -17,7 +17,7 @@ pub const SCHEMA: &str = r#"
     
     kind: String,
     =>
-    props: Json?      
+    props: Json      
 }
 
 :create tag {

@@ -72,37 +72,37 @@ where
 #[derive(Debug, Deserialize, Clone)]
 pub struct AtomEntry {
     #[serde(rename = "id", deserialize_with = "deserialize_abs_id")]
-    id: String,
+    pub id: String,
 
     #[serde(rename = "title")]
-    title: Option<String>,
+    pub title: Option<String>,
 
     #[serde(rename = "summary")]
-    summary: Option<String>,
+    pub summary: Option<String>,
 
     #[serde(rename = "published")]
-    published: Option<String>,
+    pub published: Option<String>,
 
     #[serde(rename = "updated")]
-    updated: Option<String>,
+    pub updated: Option<String>,
 
     #[serde(rename = "author", default)]
-    authors: Vec<AtomAuthor>,
+    pub authors: Vec<AtomAuthor>,
 
     // <category term="cs.ET" .../>
     #[serde(rename = "category", default)]
-    categories: Vec<AtomCategory>,
+    pub categories: Vec<AtomCategory>,
     #[serde(rename = "comment", alias = "arxiv:comment")]
-    comment: Option<String>,
+    pub comment: Option<String>,
 
     #[serde(rename = "journal_ref", alias = "arxiv:journal_ref")]
-    journal_ref: Option<String>,
+    pub journal_ref: Option<String>,
 
     #[serde(rename = "doi", alias = "arxiv:doi")]
-    doi: Option<String>,
+    pub doi: Option<String>,
 
     #[serde(rename = "primary_category", alias = "arxiv:primary_category")]
-    primary_category: Option<AtomCategory>,
+    pub primary_category: Option<AtomCategory>,
 }
 
 #[allow(dead_code)]

@@ -75,7 +75,7 @@ fn impl_poirot_builder(ast: &syn::DeriveInput) -> TokenStream {
                 proc_macro2::Span::call_site(),
             );
             with_methods.push(quote! {
-                fn #method_name(mut self, value: #ident_type) -> Self {
+                pub fn #method_name(mut self, value: #ident_type) -> Self {
                     self.#ref_ident = Some(value);
                     self
                 }
@@ -102,7 +102,7 @@ fn impl_poirot_builder(ast: &syn::DeriveInput) -> TokenStream {
     quote! {
 
         #[derive(Debug,Default)]
-        struct #builder_name {
+        pub struct #builder_name {
             #(
                 #mandatory_fields_decls
             )*

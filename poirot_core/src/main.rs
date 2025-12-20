@@ -248,7 +248,12 @@ impl Render for WindowDemo {
 
 actions!(window, [Quit]);
 */
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+use poirot_core::services::provider::{arxiv::{ArxivProvider, ArxivQuery},atomfeed::ArxivResult};
+use std::time::Instant;
+use poirot_core::{PoirotBuilder,LiteratureProvider};
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
         .format(|buf, record| {
             use std::io::Write;
@@ -257,14 +262,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
     log::info!("Custom log format example");
 
-    let arm = AcademicResourceManager::new(Engine::RocksDB, "academic_resources.db")?;
+    let arm = AcademicResourceManager::new(Engine::Mem, "academic_resources.db")?;
     arm.get_path();
     arm.get_engine();
     info!("Ready to manage academic resources.");
 
-    // TODO inesert new entries in the database
 
-    let query_script = "?[id, kind, title, autors, uri, year, props] <- *entity[id, kind, title, autors, uri, year, props]";
+    let query_script = "?[id, kind, title, authors] <- *entity{id:'id', kind:'kind', title:'title', authors:'authors',uri:?,'year':?,'props':?} limit 5;";
     let entries = arm.db.run_script(
         query_script,
         Default::default(),
@@ -274,6 +278,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(first_entry) = entries.rows.first() {
         info!("First entry sample: {:?}", first_entry);
     }
+    
+        let provider = ArxivProvider::new().unwrap();
+
+        let query: ArxivQuery = ArxivQuery::builder()
+            .with_query(r#""quantum""#)
+            .with_per_page(10)
+            .with_from_page(Some(0))
+            .with_to_page(Some(16))
+            .build()
+            .unwrap();
+
+        println!("{:?}", query.write_query());
+        let start = Instant::now();
+        //let provider15=provider.clone();
+        let results: ArxivResult = provider.search(query).await.unwrap();
+
+        for entry in results.entries.iter() {
+            println!("Title: {}", entry.title.clone().unwrap());
+            println!("Id: {}", entry.id);
+            println!("entry: {:?}", entry.clone());
+            println!("-----------------------------------");
+        }
 
     Ok(())
 }
