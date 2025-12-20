@@ -1,12 +1,12 @@
+
 /target
 *.db
 *.sqlite
-*/*.db
-*/*.sqlite
+/*.db
+/*.sqlite
 poirot_gui
 poirot_gui/*
 **/target
 */target/*
 poirot_core/target
 poirot_core/target
-*.exe
